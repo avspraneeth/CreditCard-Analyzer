@@ -744,18 +744,18 @@ async function submitAddCard() {
   var baseRate=parseFloat(baseStr)/100;
   if(isNaN(baseRate)||baseRate<=0){status.textContent='Base rate must be a number e.g. 2 for 2%.';status.style.color='var(--danger)';return;}
   var apiKey=getApiKey();
-  if(!apiKey){status.textContent='Anthropic API key required — set it via ⚙ API Key.';status.style.color='var(--danger)';openApiKeyModal();return;}
+  if(!apiKey){status.textContent='Gemini API key required — set it via ⚙ API Key.';status.style.color='var(--danger)';openApiKeyModal();return;}
   var manualPartners=ptxt?ptxt.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(n){var cn=canonical(n);return{name:cn,type:(ALLIANCE[cn]?'airline':'hotel')};}):[];
   var co={};DEFAULT_CATS.forEach(function(cat){co[cat]=baseRate;});
   var id='custom_'+Date.now();
   var nc={id:id,name:name,currency:currency,baseRate:baseRate,forexMarkup:0.035,intlRate:baseRate,intlTravelRate:baseRate,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'',milestones:'N/A'};
-  status.textContent='Fetching T&Cs via Claude…';status.style.color='var(--accent)';
+  status.textContent='Fetching T&Cs via Gemini…';status.style.color='var(--accent)';
   try{
     var prompt='You are a credit card data assistant for Indian credit cards. Given this card, provide structured earn rates and program details from your knowledge.\n\nCard: "'+name+'"\nRewards currency: "'+currency+'"\nUser-provided base earn rate: '+baseStr+'% per Rs.100\n\nRespond with ONLY valid JSON (no markdown, no extra text):\n{\n  "baseRate": 0.02,\n  "forexMarkup": 0.035,\n  "intlRate": 0.02,\n  "intlTravelRate": 0.02,\n  "categories": {\n    "Flights": 0.02, "Hotels": 0.02, "Dining": 0.02, "Shopping": 0.02,\n    "Groceries": 0.02, "Entertainment": 0.02, "Healthcare": 0.02, "Education": 0.02,\n    "Utilities": 0.02, "Insurance": 0.02, "Fuel": 0.0, "Rent": 0.0,\n    "Government": 0.0, "Jewellery": 0.0, "Wallet Loads": 0.0, "International Transactions": 0.02\n  },\n  "exclusions": ["Fuel","Rent","Government"],\n  "partners": [{"name": "Singapore Airlines (KrisFlyer)", "type": "airline"}],\n  "notes": "Key T&C summary",\n  "milestones": "Spending milestone benefits or N/A"\n}\nRules: rates are decimal fractions (2%=0.02). exclusions = categories where no rewards earned (set those to 0.0 in categories too). partners = transfer/loyalty program partners only (not cashback), use official program names. forexMarkup 0.035 unless zero-forex card. If unknown, use reasonable defaults.';
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1200,temperature:0.1}})});
     var data=await resp.json();
     if(!resp.ok){throw new Error((data.error&&data.error.message)||'API error '+resp.status);}
-    var text=(data.content||[]).map(function(b){return b.text||'';}).join('').trim();
+    var text=((data.candidates||[])[0]||{content:{parts:[{text:''}]}}).content.parts.map(function(p){return p.text||'';}).join('').trim();
     var jsonMatch=text.match(/\{[\s\S]*\}/);
     if(jsonMatch){
       try{
@@ -808,7 +808,7 @@ function openApiKeyModal(){
   var inp=document.getElementById('apikey-input');
   var lbl=document.getElementById('apikey-status-lbl');
   var existing=getApiKey();
-  if(inp){inp.value='';inp.placeholder=existing?'Enter new key to replace existing…':'sk-ant-api03-...';}
+  if(inp){inp.value='';inp.placeholder=existing?'Enter new key to replace existing…':'AIza...';}
   if(lbl){lbl.textContent=existing?'✓ Key saved ('+existing.slice(-4)+' …last 4 chars)':'No key saved yet.';lbl.style.color=existing?'var(--success)':'var(--muted)';}
   document.getElementById('apikey-modal').classList.remove('hidden');
 }
