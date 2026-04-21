@@ -806,13 +806,20 @@ async function submitAddCard() {
 function getApiKey(){return localStorage.getItem('ccanalyzer_apikey')||'';}
 function openApiKeyModal(){
   var inp=document.getElementById('apikey-input');
-  if(inp)inp.value='';
+  var lbl=document.getElementById('apikey-status-lbl');
+  var existing=getApiKey();
+  if(inp){inp.value='';inp.placeholder=existing?'Enter new key to replace existing…':'sk-ant-api03-...';}
+  if(lbl){lbl.textContent=existing?'✓ Key saved ('+existing.slice(-4)+' …last 4 chars)':'No key saved yet.';lbl.style.color=existing?'var(--success)':'var(--muted)';}
   document.getElementById('apikey-modal').classList.remove('hidden');
 }
 function closeApiKeyModal(){document.getElementById('apikey-modal').classList.add('hidden');}
 function saveApiKey(){
   var val=(document.getElementById('apikey-input').value||'').trim();
-  if(!val||!val.startsWith('sk-')){alert('Please enter a valid Anthropic API key (starts with sk-ant-...).'); return;}
+  if(!val){
+    var lbl=document.getElementById('apikey-status-lbl');
+    if(lbl){lbl.textContent='Please enter your API key.';lbl.style.color='var(--danger)';}
+    return;
+  }
   localStorage.setItem('ccanalyzer_apikey',val);
   document.getElementById('apikey-input').value='';
   closeApiKeyModal();

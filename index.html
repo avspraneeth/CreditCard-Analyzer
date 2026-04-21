@@ -118,9 +118,13 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
     <button class="modal-close" onclick="closeApiKeyModal()">✕</button>
     <div class="modal-title">Anthropic API Key</div>
     <div class="modal-sub">Required to auto-fetch card T&amp;Cs and earn rates via Claude. Your key is stored only in your browser (localStorage) — never sent anywhere except api.anthropic.com.</div>
-    <div class="field"><label>API Key</label><input type="password" id="apikey-input" placeholder="sk-ant-api03-..." autocomplete="off"></div>
+    <div class="field">
+      <label>API Key</label>
+      <input type="password" id="apikey-input" placeholder="sk-ant-api03-..." autocomplete="off">
+      <div id="apikey-status-lbl" style="font-size:.72rem;margin-top:.35rem;color:var(--muted)"></div>
+    </div>
     <div style="background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:6px;padding:.65rem .9rem;font-size:.75rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">
-      Get your key at <strong style="color:var(--text)">console.anthropic.com</strong> → API Keys. The key is only used locally in your browser.
+      Get your key at <strong style="color:var(--text)">console.anthropic.com</strong> → API Keys. Stored only in your browser's localStorage.
     </div>
     <div style="display:flex;gap:.8rem">
       <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1">Save Key →</button>
