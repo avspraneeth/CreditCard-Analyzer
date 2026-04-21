@@ -1,4 +1,4 @@
-// cc-save.js — Save, Restore & Google Drive logic for CC Analyzer
+// cc-save.js — State persistence for CC Analyzer (localStorage + download)
 
 document.addEventListener('DOMContentLoaded', function () {
   initSpendInputs();
@@ -15,14 +15,10 @@ function captureState() {
     if (el) spends[cat] = parseFloat(el.dataset.raw || el.value.replace(/,/g,'')) || 0;
   });
   return {
-    version: 2,
+    version: 3,
+    cards: JSON.parse(JSON.stringify(cards)),
     cats: cats.slice(),
     pv: Object.assign({}, pv),
-    exclusions: (function() {
-      var o = {};
-      cards.forEach(function(c) { o[c.id] = c.exclusions.slice(); });
-      return o;
-    })(),
     spends: spends,
     pctFlights: parseFloat((document.getElementById('pct-flights')||{}).value) || 50,
     pctHotels:  parseFloat((document.getElementById('pct-hotels') ||{}).value) || 50,
@@ -33,17 +29,29 @@ function captureState() {
 }
 
 function applyState(state) {
-  if (!state || state.version !== 2) return;
+  if (!state || state.version !== 3) return;
+
+  // Restore full card objects
+  if (Array.isArray(state.cards)) {
+    cards = JSON.parse(JSON.stringify(state.cards));
+    var sel = document.getElementById('data-card-select');
+    if (sel) {
+      sel.innerHTML = '';
+      cards.forEach(function(c) {
+        var o = document.createElement('option');
+        o.value = c.id; o.textContent = c.name;
+        sel.appendChild(o);
+      });
+    }
+    populateTravelSelects();
+  }
+
   if (Array.isArray(state.cats) && state.cats.length) {
     cats = state.cats.slice();
     initSpendInputs();
   }
   if (state.pv) Object.assign(pv, state.pv);
-  if (state.exclusions) {
-    cards.forEach(function(card) {
-      if (state.exclusions[card.id]) card.exclusions = state.exclusions[card.id].slice();
-    });
-  }
+
   if (state.spends) {
     cats.forEach(function(cat) {
       var el = document.getElementById('spend-' + cat);
@@ -81,12 +89,18 @@ function restoreState() {
   } catch(e) { console.warn('restoreState:', e); }
 }
 
+// ── Auto-save to localStorage ─────────────────────────────────────────────────
+
+function autoSave() {
+  try { localStorage.setItem('ccanalyzer_state', JSON.stringify(captureState())); } catch(e) {}
+}
+
 // ── Build download HTML ───────────────────────────────────────────────────────
 
 function buildDownloadHTML(state) {
   var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  var OT  = '\u003cscript id="_ccab"\u003e';
-  var CT  = '\u003c/script\u003e';
+  var OT  = '<script id="_ccab">';
+  var CT  = '</script>';
   var boot = '\n' + OT + '\n' +
     '(function(){\n' +
     '  try{\n' +
@@ -96,12 +110,12 @@ function buildDownloadHTML(state) {
     '})();\n' +
     CT + '\n';
   var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-  html = html.replace(new RegExp('\u003cscript id="_ccab"\u003e[\\s\\S]*?\u003c/script\u003e\\s*', 'g'), '');
+  html = html.replace(new RegExp('<script id="_ccab">[\\s\\S]*?</script>\\s*', 'g'), '');
   html = html.replace('</head>', boot + '</head>');
   return html;
 }
 
-// ── Option A: Download ────────────────────────────────────────────────────────
+// ── Download ──────────────────────────────────────────────────────────────────
 
 function saveLocal() {
   var state = captureState();
@@ -115,90 +129,11 @@ function saveLocal() {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showStatus('Downloaded \u2713', 'ok');
+    showStatus('Downloaded ✓', 'ok');
   } catch(e) {
     showStatus('Download failed', 'err');
     console.error('saveLocal:', e);
   }
-}
-
-// ── Option B: Save via Apps Script (no OAuth needed) ─────────────────────────
-
-var WEB_APP_URL_KEY = 'ccanalyzer_webapp_url';
-
-function getWebAppUrl() {
-  return localStorage.getItem(WEB_APP_URL_KEY) || '';
-}
-
-function saveWebAppUrl(url) {
-  localStorage.setItem(WEB_APP_URL_KEY, url);
-}
-
-async function saveToDrive() {
-  var webAppUrl = getWebAppUrl();
-  if (!webAppUrl) { openModal(); return; }
-
-  setSaving(true);
-  showStatus('Saving to Drive\u2026', '');
-
-  try {
-    var state = captureState();
-    try { localStorage.setItem('ccanalyzer_state', JSON.stringify(state)); } catch(e) {}
-
-    var html = buildDownloadHTML(state);
-
-    var resp = await fetch(webAppUrl, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'save', html: html }),
-    });
-
-    // Apps Script redirects to a final URL — follow it
-    var data = await resp.json();
-
-    if (data.ok) {
-      showStatus('Saved to Drive \u2713 ' + new Date().toLocaleTimeString(), 'ok');
-      // Store the Drive file URL for reference
-      if (data.url) localStorage.setItem('ccanalyzer_drive_url', data.url);
-    } else {
-      throw new Error(data.error || 'Unknown error from Apps Script');
-    }
-  } catch(e) {
-    console.error('saveToDrive:', e);
-    if (e.message.includes('fetch') || e.message.includes('Failed')) {
-      showStatus('Cannot reach Apps Script \u2014 check URL in setup', 'err');
-    } else {
-      showStatus('Save failed: ' + e.message, 'err');
-    }
-  } finally {
-    setSaving(false);
-  }
-}
-
-function saveDriveConfig() {
-  var url = (document.getElementById('webapp-url-input').value || '').trim();
-  if (!url || !url.startsWith('https://script.google.com/')) {
-    alert('Please paste a valid Apps Script Web App URL\n(starts with https://script.google.com/macros/s/...)');
-    return;
-  }
-  saveWebAppUrl(url);
-  closeModal();
-  // Verify it works
-  showStatus('Testing connection\u2026', '');
-  fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.ok) {
-        showStatus('Connected \u2713 Ready to save', 'ok');
-        // Also trigger saving of T&C references on first setup
-        fetch(url, { method:'POST', body: JSON.stringify({ action:'saveRefs' }) })
-          .catch(function(){});
-      } else {
-        showStatus('Connected but got error: ' + d.error, 'err');
-      }
-    })
-    .catch(function() {
-      showStatus('URL saved. Test save to verify.', '');
-    });
 }
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
@@ -208,18 +143,4 @@ function showStatus(msg, type) {
   el.textContent = msg;
   el.className = 'save-status' + (type ? ' ' + type : '');
   if (type === 'ok') setTimeout(function(){ el.textContent = ''; el.className = 'save-status'; }, 4000);
-}
-
-function setSaving(on) {
-  document.querySelectorAll('.btn-save-drive').forEach(function(b) { b.classList.toggle('saving', on); });
-}
-
-function openModal() {
-  var saved = getWebAppUrl();
-  if (saved) document.getElementById('webapp-url-input').value = saved;
-  document.getElementById('drive-modal').classList.remove('hidden');
-}
-
-function closeModal() {
-  document.getElementById('drive-modal').classList.add('hidden');
 }

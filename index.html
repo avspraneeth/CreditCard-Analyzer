@@ -71,8 +71,10 @@ select{cursor:pointer}select option{background:var(--surface2)}
 .cat-col .cat-item{display:flex;align-items:center;gap:.6rem;padding:.38rem 0;border-bottom:1px solid rgba(42,42,58,.3);font-size:.86rem;font-weight:500}
 .cat-col .cat-item:last-child{border-bottom:none}
 .save-bar{margin-left:auto;display:flex;align-items:center;gap:.7rem}
-.btn-save-drive{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.4);color:var(--accent);padding:.48rem 1.1rem;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:.78rem;font-weight:600;letter-spacing:.04em;transition:all .2s;white-space:nowrap}
-.btn-save-drive:hover{background:rgba(201,168,76,.22);border-color:var(--accent)}.btn-save-drive.saving{opacity:.5;pointer-events:none}
+.btn-master-reset{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:.42rem .95rem;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:.75rem;font-weight:600;letter-spacing:.04em;transition:all .2s;white-space:nowrap}
+.btn-master-reset:hover{background:var(--danger);color:#fff}
+.btn-apikey{background:transparent;border:1px solid var(--border);color:var(--muted);padding:.42rem .9rem;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:.75rem;font-weight:600;letter-spacing:.04em;transition:all .2s;white-space:nowrap}
+.btn-apikey:hover{border-color:var(--accent);color:var(--accent)}
 .btn-save-local{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.35);color:#a78bfa;padding:.48rem 1.1rem;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:.78rem;font-weight:600;letter-spacing:.04em;transition:all .2s;white-space:nowrap}
 .btn-save-local:hover{background:rgba(139,92,246,.2);border-color:#a78bfa}
 .save-status{font-size:.73rem;color:var(--muted);white-space:nowrap;min-width:80px;text-align:right}
@@ -90,14 +92,6 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
 
 </style>
 
-<script id="_ccab">
-(function(){
-  try{
-    var s=JSON.parse(decodeURIComponent(escape(atob("eyJ2ZXJzaW9uIjoyLCJjYXRzIjpbIkZsaWdodHMiLCJIb3RlbHMiLCJEaW5pbmciLCJTaG9wcGluZyIsIkdyb2NlcmllcyIsIkVudGVydGFpbm1lbnQiLCJIZWFsdGhjYXJlIiwiRWR1Y2F0aW9uIiwiVXRpbGl0aWVzIiwiSW5zdXJhbmNlIiwiRnVlbCIsIlJlbnQiLCJHb3Zlcm5tZW50IiwiSmV3ZWxsZXJ5IiwiV2FsbGV0IExvYWRzIiwiSW50ZXJuYXRpb25hbCBUcmFuc2FjdGlvbnMiXSwicHYiOnsiQWVyIExpbmd1cyBBZXJDbHViIjoxLCJBaXIgQ2FuYWRhIEFlcm9wbGFuIjoxLCJBaXIgRnJhbmNlIEtMTSAoRmx5aW5nIEJsdWUpIjoxLCJBaXIgSW5kaWEgKE1haGFyYWphIENsdWIpIjowLjksIkFzaWEgTWlsZXMgKENhdGhheSkiOjEsIkJyaXRpc2ggQWlyd2F5cyAoQXZpb3MpIjoxLCJFbWlyYXRlcyBTa3l3YXJkcyI6MSwiRXRoaW9waWFuIFNoZWJhTWlsZXMiOjEsIkV0aWhhZCBHdWVzdCI6MSwiRmlubmFpciBQbHVzIjowLjMsIkliZXJpYSBQbHVzIjoxLCJKQUwgTWlsZWFnZSBCYW5rIjoxLCJMdWZ0aGFuc2EgTWlsZXMmTW9yZSI6MSwiUWF0YXIgUHJpdmlsZWdlIENsdWIiOjEsIlNBUyBFdXJvQm9udXMiOjEsIlNpbmdhcG9yZSBBaXJsaW5lcyAoS3Jpc0ZseWVyKSI6MSwiU3BpY2VKZXQgU3BpY2VDbHViIjowLjUsIlR1cmtpc2ggQWlybGluZXMgKE1pbGVzJlNtaWxlcykiOjEsIlVuaXRlZCBNaWxlYWdlUGx1cyI6MSwiVmlldG5hbSBBaXJsaW5lcyAoTG90dXNtaWxlcykiOjAuMywiVmlyZ2luIEF0bGFudGljIEZseWluZyBDbHViIjoxLCJBY2NvciBMaXZlIExpbWl0bGVzcyI6MiwiSGlsdG9uIEhvbm9ycyI6MC40LCJJSENMIC8gVGFqIEhvdGVscyI6MSwiSUhHIE9uZSBSZXdhcmRzIjowLjUsIklUQyBIb3RlbHMiOjEsIk1hcnJpb3R0IEJvbnZveSI6MC42LCJPcmNoaWQgUmV3YXJkcyI6MC41LCJSYWRpc3NvbiBSZXdhcmRzIjowLjZ9LCJleGNsdXNpb25zIjp7ImF4aXNfdmlzdGFyYSI6WyJVdGlsaXRpZXMiLCJJbnN1cmFuY2UiLCJGdWVsIiwiUmVudCIsIkdvdmVybm1lbnQiLCJKZXdlbGxlcnkiLCJXYWxsZXQgTG9hZHMiXSwiYXhpc19hdGxhcyI6WyJVdGlsaXRpZXMiLCJJbnN1cmFuY2UiLCJGdWVsIiwiUmVudCIsIkdvdmVybm1lbnQiLCJKZXdlbGxlcnkiLCJXYWxsZXQgTG9hZHMiXSwiaW5kdXNpbmRfYXZpb3MiOlsiRnVlbCJdLCJib2JfZXRpaGFkIjpbIkRpbmluZyIsIlNob3BwaW5nIiwiR3JvY2VyaWVzIiwiSGVhbHRoY2FyZSIsIkVkdWNhdGlvbiIsIkluc3VyYW5jZSIsIkZ1ZWwiLCJSZW50IiwiR292ZXJubWVudCIsIldhbGxldCBMb2FkcyJdLCJpY2ljaV9lbWlyYXRlcyI6WyJGdWVsIl0sImljaWNpX3RpbWVzX2JsYWNrIjpbIlJlbnQiLCJXYWxsZXQgTG9hZHMiXSwiaGRmY190YXRhX25ldSI6WyJGdWVsIiwiUmVudCIsIkdvdmVybm1lbnQiLCJXYWxsZXQgTG9hZHMiXSwiaGRmY19tYXJyaW90dCI6WyJGdWVsIiwiV2FsbGV0IExvYWRzIl0sImFtZXhfcGxhdF90cmF2ZWwiOlsiVXRpbGl0aWVzIiwiSW5zdXJhbmNlIiwiRnVlbCJdLCJoc2JjX3ByZW1pZXIiOlsiRnVlbCIsIkpld2VsbGVyeSIsIldhbGxldCBMb2FkcyIsIkVkdWNhdGlvbiJdLCJoc2JjX3RyYXZlbG9uZSI6WyJFZHVjYXRpb24iLCJVdGlsaXRpZXMiLCJJbnN1cmFuY2UiLCJGdWVsIiwiUmVudCIsIkdvdmVybm1lbnQiLCJKZXdlbGxlcnkiLCJXYWxsZXQgTG9hZHMiXSwic2JpX2NhcmRfZWxpdGUiOlsiRnVlbCIsIlJlbnQiLCJXYWxsZXQgTG9hZHMiXSwiaWNpY2lfbW10IjpbIkZ1ZWwiLCJSZW50IiwiV2FsbGV0IExvYWRzIl0sImFtZXhfcGxhdF9yZXNlcnZlIjpbIlV0aWxpdGllcyIsIkluc3VyYW5jZSIsIkZ1ZWwiLCJXYWxsZXQgTG9hZHMiXX0sInNwZW5kcyI6eyJGbGlnaHRzIjozNTAwMDAsIkhvdGVscyI6MTUwMDAwLCJEaW5pbmciOjEyMDAwMCwiU2hvcHBpbmciOjYwMDAwLCJHcm9jZXJpZXMiOjYwMDAwLCJFbnRlcnRhaW5tZW50IjozMDAwMCwiSGVhbHRoY2FyZSI6NjAwMDAsIkVkdWNhdGlvbiI6MjUwMDAwLCJVdGlsaXRpZXMiOjkwMDAwLCJJbnN1cmFuY2UiOjE0MDAwMDAsIkZ1ZWwiOjkwMDAwLCJSZW50IjowLCJHb3Zlcm5tZW50IjowLCJKZXdlbGxlcnkiOjAsIldhbGxldCBMb2FkcyI6NjAwMDAsIkludGVybmF0aW9uYWwgVHJhbnNhY3Rpb25zIjoyMDAwMDB9LCJwY3RGbGlnaHRzIjoyNSwicGN0SG90ZWxzIjo3NSwiZGVmQWlybGluZSI6IkFpciBJbmRpYSAoTWFoYXJhamEgQ2x1YikiLCJkZWZIb3RlbCI6IkFjY29yIExpdmUgTGltaXRsZXNzIiwiaW50bFRyYXZlbFBjdCI6MC43NX0="))));
-    localStorage.setItem("ccanalyzer_state",JSON.stringify(s));
-  }catch(e){}
-})();
-</script>
 </head>
 <body>
 
@@ -110,32 +104,27 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
   </nav>
   <div class="save-bar">
     <span class="save-status" id="save-status"></span>
-    <button class="btn-save-drive" onclick="saveToDrive()" title="Save to Google Drive">▲ Save to Drive</button>
+    <button class="btn-apikey" onclick="openApiKeyModal()" title="Set Anthropic API key">⚙ API Key</button>
+    <button class="btn-master-reset" onclick="masterReset()" title="Remove all added credit cards">⊗ Master Reset</button>
     <button class="btn-save-local" onclick="saveLocal()" title="Download updated HTML file">⬇ Download</button>
   </div>
 </header>
 
-<!-- Drive setup modal -->
-<div class="modal-overlay hidden" id="drive-modal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-title">Google Drive Setup</div>
-    <div class="modal-sub">One-time setup (~5 min). Uses Google Apps Script — no OAuth, no Client ID, just your Google account.</div>
-    <div class="step-row"><span class="step-num">1</span><span>Go to <a href="https://script.google.com" target="_blank">script.google.com</a> → click <strong>New project</strong></span></div>
-    <div class="step-row"><span class="step-num">2</span><span>Delete any existing code. Paste the contents of <strong>Code.gs</strong> into the editor → Save (Ctrl+S)</span></div>
-    <div class="step-row"><span class="step-num">3</span><span>Click <strong>Deploy</strong> → New deployment → type: <strong>Web app</strong> → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy</span></div>
-    <div class="step-row"><span class="step-num">4</span><span>Copy the <strong>Web app URL</strong> (starts with <code>https://script.google.com/macros/s/...</code>) and paste below</span></div>
-    <div class="step-row"><span class="step-num">5</span><span>Click <strong>Save &amp; Test</strong>. The app will create <code>Claude/Credit Card App/</code> in your Drive automatically on first save.</span></div>
-    <div class="field" style="margin-top:1rem">
-      <label>Apps Script Web App URL</label>
-      <input type="text" id="webapp-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:.8rem">
-    </div>
+
+
+<!-- API Key modal -->
+<div class="modal-overlay hidden" id="apikey-modal">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="closeApiKeyModal()">✕</button>
+    <div class="modal-title">Anthropic API Key</div>
+    <div class="modal-sub">Required to auto-fetch card T&amp;Cs and earn rates via Claude. Your key is stored only in your browser (localStorage) — never sent anywhere except api.anthropic.com.</div>
+    <div class="field"><label>API Key</label><input type="password" id="apikey-input" placeholder="sk-ant-api03-..." autocomplete="off"></div>
     <div style="background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:6px;padding:.65rem .9rem;font-size:.75rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">
-      After deploying, if Google asks to review permissions, click <strong>Advanced</strong> → <strong>Go to (app name)</strong> → Allow.
+      Get your key at <strong style="color:var(--text)">console.anthropic.com</strong> → API Keys. The key is only used locally in your browser.
     </div>
     <div style="display:flex;gap:.8rem">
-      <button class="btn btn-primary" onclick="saveDriveConfig()" style="flex:1">Save &amp; Test Connection →</button>
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1">Save Key →</button>
+      <button class="btn btn-ghost" onclick="closeApiKeyModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -145,7 +134,7 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
   <div class="modal-box" style="max-width:520px">
     <button class="modal-close" onclick="closeAddCardModal()">✕</button>
     <div class="modal-title">Add Credit Card</div>
-    <div class="modal-sub">Fill in card details. T&amp;Cs are auto-fetched via Claude on add.</div>
+    <div class="modal-sub">Enter card name and base earn rate. All earn rates, exclusions and partners are auto-fetched from Claude.</div>
     <div class="field"><label>Card Name</label><input type="text" id="ac-name" placeholder="e.g. HDFC Infinia"></div>
     <div class="field"><label>Rewards Currency</label><input type="text" id="ac-currency" placeholder="e.g. Reward Points, Miles, NeuCoins"></div>
     <div class="field"><label>Base Earn Rate (%)</label><input type="number" id="ac-base" placeholder="e.g. 3.3" min="0" step="0.1"></div>
@@ -177,11 +166,11 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
       <div>
         <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.55rem">Optimized Outputs</div>
         <div class="out-panel">
-          <div class="out-metric"><span class="oml">Total Reward Value (₹/yr)</span><span class="omv" id="o-total">₹3.65L</span></div>
-          <div class="out-metric"><span class="oml">Effective Reward Rate</span><span class="omv" id="o-rate">12.49%</span></div>
-          <div class="out-metric"><span class="oml">Best Card</span><span class="omv" id="o-bcard">HSBC Premier</span></div>
-          <div class="out-metric"><span class="oml">Best Card Eff. Rate</span><span class="omv" id="o-brate">14.79%</span></div>
-          <div class="out-metric"><span class="oml">Top Earning Category</span><span class="omv" id="o-topcat">Flights (₹1.26L)</span></div>
+          <div class="out-metric"><span class="oml">Total Reward Value (₹/yr)</span><span class="omv zero" id="o-total">—</span></div>
+          <div class="out-metric"><span class="oml">Effective Reward Rate</span><span class="omv zero" id="o-rate">—</span></div>
+          <div class="out-metric"><span class="oml">Best Card</span><span class="omv zero" id="o-bcard">—</span></div>
+          <div class="out-metric"><span class="oml">Best Card Eff. Rate</span><span class="omv zero" id="o-brate">—</span></div>
+          <div class="out-metric"><span class="oml">Top Earning Category</span><span class="omv zero" id="o-topcat">—</span></div>
         </div>
         <div style="margin-top:.9rem">
           <button class="btn btn-primary" onclick="runOptimizer()" style="width:100%">Optimize →</button>
@@ -191,7 +180,7 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
   </div>
 
   <!-- Feature 1 results: alloc table + charts (shown after Optimize) -->
-  <div id="optimizer-results" style="display: block;">
+  <div id="optimizer-results" style="display: none;">
     <div class="g2" style="gap:1.2rem;margin-bottom:1.2rem">
       <div class="card">
         <div class="card-title">Category Allocation</div>
@@ -223,13 +212,13 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
         </div>
         <div style="font-size:.7rem;color:var(--muted);margin-bottom:.5rem">Preferred redemption programs:</div>
         <div class="g2" style="gap:.7rem;margin-bottom:.75rem">
-          <div class="field" style="margin-bottom:0"><label>Airline Program</label><select id="default-airline"><option value="Air India (Maharaja Club)">Air India (Maharaja Club)</option><option value="Singapore Airlines (KrisFlyer)">Singapore Airlines (KrisFlyer)</option><option value="Air Canada Aeroplan">Air Canada Aeroplan</option><option value="JAL Mileage Bank">JAL Mileage Bank</option><option value="British Airways (Avios)">British Airways (Avios)</option><option value="Finnair Plus">Finnair Plus</option><option value="Vietnam Airlines (Lotusmiles)">Vietnam Airlines (Lotusmiles)</option><option value="Air France KLM (Flying Blue)">Air France KLM (Flying Blue)</option><option value="United MileagePlus">United MileagePlus</option><option value="Turkish Airlines (Miles&amp;Smiles)">Turkish Airlines (Miles&amp;Smiles)</option><option value="Ethiopian ShebaMiles">Ethiopian ShebaMiles</option><option value="SpiceJet SpiceClub">SpiceJet SpiceClub</option><option value="Qatar Privilege Club">Qatar Privilege Club</option><option value="Iberia Plus">Iberia Plus</option><option value="Aer Lingus AerClub">Aer Lingus AerClub</option><option value="Etihad Guest">Etihad Guest</option><option value="Emirates Skywards">Emirates Skywards</option><option value="Virgin Atlantic Flying Club">Virgin Atlantic Flying Club</option><option value="Asia Miles (Cathay)">Asia Miles (Cathay)</option><option value="Lufthansa Miles&amp;More">Lufthansa Miles&amp;More</option><option value="SAS EuroBonus">SAS EuroBonus</option></select></div>
-          <div class="field" style="margin-bottom:0"><label>Hotel Program</label><select id="default-hotel"><option value="ITC Hotels">ITC Hotels</option><option value="IHG One Rewards">IHG One Rewards</option><option value="Orchid Rewards">Orchid Rewards</option><option value="Radisson Rewards">Radisson Rewards</option><option value="IHCL / Taj Hotels">IHCL / Taj Hotels</option><option value="Marriott Bonvoy">Marriott Bonvoy</option><option value="Hilton Honors">Hilton Honors</option><option value="Taj Hotels Voucher">Taj Hotels Voucher</option><option value="Accor Live Limitless">Accor Live Limitless</option></select></div>
+          <div class="field" style="margin-bottom:0"><label>Airline Program</label><select id="default-airline"></select></div>
+          <div class="field" style="margin-bottom:0"><label>Hotel Program</label><select id="default-hotel"></select></div>
         </div>
         <button class="btn btn-primary" onclick="runCustomSplit()" style="width:100%">Custom Split →</button>
       </div>
       <!-- Right: Custom Split results (hidden until run) -->
-      <div id="custom-split-results" style="display: block;">
+      <div id="custom-split-results" style="display: none;">
         <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.6rem">Custom Split Redemption</div>
         <div class="out-panel" style="margin-bottom:.9rem">
           <div class="out-metric" style="align-items:flex-start">
@@ -261,7 +250,7 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
       <div class="field" style="margin-bottom:0"><label>Category</label><select id="quick-category"><option value="Flights">Flights</option><option value="Hotels">Hotels</option><option value="Dining">Dining</option><option value="Shopping">Shopping</option><option value="Groceries">Groceries</option><option value="Entertainment">Entertainment</option><option value="Healthcare">Healthcare</option><option value="Education">Education</option><option value="Utilities">Utilities</option><option value="Insurance">Insurance</option><option value="Fuel">Fuel</option><option value="Rent">Rent</option><option value="Government">Government</option><option value="Jewellery">Jewellery</option><option value="Wallet Loads">Wallet Loads</option><option value="International Transactions">International Transactions</option></select></div>
       <div class="field" style="margin-bottom:0;display:flex;align-items:flex-end"><button class="btn btn-primary" onclick="runQuickCheck()" style="width:100%">Find Best Card →</button></div>
     </div>
-    <div id="quick-results" style="display: block;">
+    <div id="quick-results" style="display: none;">
       <hr class="divider" style="margin:.35rem 0 .85rem">
       <div class="g2" style="gap:1.1rem">
         <div><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.55rem">CARD RANKING</div><div id="quick-card-list"><div class="result-row best"><div style="display:flex;align-items:center"><div class="rk rk1">1</div><div><div class="rn">Axis Atlas</div><div class="rd">4,250 pts · 4.25% earn</div></div></div><div class="rv"><div class="ra">₹8,500</div><div class="rr">8.50% return</div></div></div><div class="result-row"><div style="display:flex;align-items:center"><div class="rk rk2">2</div><div><div class="rn">HSBC TravelOne</div><div class="rd">4,000 pts · 4.00% earn</div></div></div><div class="rv"><div class="ra">₹8,000</div><div class="rr">8.00% return</div></div></div><div class="result-row"><div style="display:flex;align-items:center"><div class="rk rk3">3</div><div><div class="rn">HSBC Premier</div><div class="rd">3,000 pts · 3.00% earn</div></div></div><div class="rv"><div class="ra">₹6,000</div><div class="rr">6.00% return</div></div></div><div class="result-row"><div style="display:flex;align-items:center"><div class="rk rkn">4</div><div><div class="rn">Amex Platinum Reserve</div><div class="rd">2,000 pts · 2.00% earn</div></div></div><div class="rv"><div class="ra">₹4,000</div><div class="rr">4.00% return</div></div></div><div class="result-row"><div style="display:flex;align-items:center"><div class="rk rkn">5</div><div><div class="rn">Axis Vistara Infinite</div><div class="rd">3,000 pts · 3.00% earn</div></div></div><div class="rv"><div class="ra">₹2,700</div><div class="rr">2.70% return</div></div></div></div></div>
@@ -278,7 +267,7 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
     <div><div class="sec-title">Card Data</div><div class="sec-sub">Select a card to view earn rates, exclusions and redemption partners</div></div>
     <button class="btn btn-ghost" onclick="resetDataToDefaults()">↻ Reset Exclusions</button>
   </div>
-  <div class="field"><label>Select Card</label><select id="data-card-select" onchange="renderCardDetail()" style="max-width:380px"><option value="axis_vistara">Axis Vistara Infinite</option><option value="axis_atlas">Axis Atlas</option><option value="indusind_avios">IndusInd Avios Infinite</option><option value="bob_etihad">BOBCard Etihad Guest Premier</option><option value="icici_emirates">ICICI Emirates Emeralde</option><option value="icici_times_black">ICICI Times Black</option><option value="hdfc_tata_neu">HDFC Tata Neu Infinity</option><option value="hdfc_marriott">HDFC Marriott Bonvoy</option><option value="amex_plat_travel">Amex Platinum Travel</option><option value="hsbc_premier">HSBC Premier</option><option value="hsbc_travelone">HSBC TravelOne</option><option value="sbi_card_elite">SBI Card Elite</option><option value="icici_mmt">ICICI MakeMyTrip</option><option value="amex_plat_reserve">Amex Platinum Reserve</option></select></div>
+  <div class="field"><label>Select Card</label><select id="data-card-select" onchange="renderCardDetail()" style="max-width:380px"></select></div>
   <div class="g2" style="align-items:start;gap:1.4rem">
     <div id="card-earn-rates"><div class="card" style="margin-top:0"><div class="card-title">Earn Rates — Axis Vistara Infinite</div><table class="data-table"><thead><tr><th>Category</th><th>Earn Rate</th><th>Pts/₹100</th></tr></thead><tbody><tr style=""><td>Flights</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Hotels</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Dining</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Shopping</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Groceries</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Entertainment</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Healthcare</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style=""><td>Education</td><td>3.00%</td><td class="fm">3.000</td></tr><tr style="opacity:.38"><td>Utilities</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style="opacity:.38"><td>Insurance</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style="opacity:.38"><td>Fuel</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style="opacity:.38"><td>Rent</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style="opacity:.38"><td>Government</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style="opacity:.38"><td>Jewellery</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style="opacity:.38"><td>Wallet Loads</td><td><span style="color:var(--danger);font-size:.74rem">Excluded</span></td><td class="fm">0.000</td></tr><tr style=""><td>International Transactions</td><td>3.00%</td><td class="fm">3.000</td></tr></tbody></table></div></div>
     <div id="card-detail-right"><div class="card"><div class="card-title">Settings &amp; Partners</div><div style="display:flex;gap:.4rem;margin-bottom:.9rem"><span class="badge badge-gold">3.00% base</span><span class="badge badge-green">CV Points / Air India Miles</span></div><div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.45rem">Exclusion Toggle</div><div style="margin-bottom:.9rem"><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Flights',this)">Flights</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Hotels',this)">Hotels</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Dining',this)">Dining</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Shopping',this)">Shopping</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Groceries',this)">Groceries</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Entertainment',this)">Entertainment</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Healthcare',this)">Healthcare</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','Education',this)">Education</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Utilities',this)">Utilities</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Insurance',this)">Insurance</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Fuel',this)">Fuel</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Rent',this)">Rent</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Government',this)">Government</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Jewellery',this)">Jewellery</span><span class="exclusion-chip active" onclick="toggleExclusion('axis_vistara','Wallet Loads',this)">Wallet Loads</span><span class="exclusion-chip" onclick="toggleExclusion('axis_vistara','International Transactions',this)">International Transactions</span></div><div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.45rem">Redemption Partners (ratio shown)</div><div style="margin-bottom:.9rem"><span class="partner-tag airline" title="Transfer ratio: 1:1">Air India (Maharaja Club) <small style="opacity:.7">1:1</small></span></div><div style="background:var(--surface2);border-radius:7px;padding:.8rem;font-size:.76rem;color:var(--muted);line-height:1.6"><strong style="color:var(--accent);display:block;margin-bottom:.25rem">Notes</strong>Discontinued for new applications post Vistara-Air India merger. 6 CV pts per Rs.200. 1 CV pt = 1 Air India Maharaja Club mile.<br><br><strong style="color:var(--accent);display:block;margin-bottom:.25rem">Milestones</strong>Rs.1L-&gt;10K bonus pts; Rs.2.5/5/7.5/12L -&gt; Business Class ticket vouchers</div></div></div>

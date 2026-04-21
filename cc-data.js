@@ -54,7 +54,8 @@ var ALLIANCE = {
 
 
 
-var DC = [
+var DC = [];
+var _LEGACY_DC = [
   {id:'axis_vistara',name:'Axis Vistara Infinite',currency:'CV Points / Air India Miles',baseRate:6/200,forexMarkup:0.035,intlRate:0.03,intlTravelRate:0.03,
    categories:{'Flights':6/200,'Hotels':6/200,'Dining':6/200,'Shopping':6/200,'Groceries':6/200,'Entertainment':6/200,'Healthcare':6/200,'Education':6/200,'Utilities':0,'Insurance':0,'Fuel':0,'Rent':0,'Government':0,'Jewellery':0,'Wallet Loads':0,'International Transactions':0.03},
    exclusions:['Utilities','Insurance','Fuel','Rent','Government','Jewellery','Wallet Loads'],dex:['Utilities','Insurance','Fuel','Rent','Government','Jewellery','Wallet Loads'],
@@ -197,7 +198,7 @@ var DC = [
    notes:'1 MR per Rs.50 on all eligible spends (2% earn). Airline transfers at 2:1 (2 MR = 1 mile) — half the value of Amex Platinum Travel which transfers at 1:1. Exclusions: fuel, insurance, utilities. Complimentary Taj Epicure + Accor+ Explorer memberships. Rs.10,000 fee waived at Rs.10L spend.',
    milestones:'Accor+ Explorer membership (30% dining discount). Priority Pass for intl lounges.'},
 
-];
+]; // end _LEGACY_DC
 
 var DEFAULT_CATS = ['Flights','Hotels','Dining','Shopping','Groceries','Entertainment','Healthcare','Education','Utilities','Insurance','Fuel','Rent','Government','Jewellery','Wallet Loads','International Transactions'];
 
@@ -531,15 +532,30 @@ function runQuickCheck() {
 // ── Data tab ──────────────────────────────────────────────────────────────────
 function initDataTab() {
   var sel = document.getElementById('data-card-select');
-  if (!sel.options.length) cards.forEach(function(c){
-    var o = document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o);
+  // Sync dropdown with current cards array (handles both fresh load and state restore)
+  var existing = Array.from(sel.options).map(function(o){return o.value;});
+  cards.forEach(function(c){
+    if (existing.indexOf(c.id) < 0) {
+      var o = document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o);
+    }
   });
   renderCardDetail();
 }
 
 function renderCardDetail() {
-  var cardId = document.getElementById('data-card-select').value;
-  var card = cards.find(function(c){return c.id===cardId;}); if (!card) return;
+  var sel = document.getElementById('data-card-select');
+  var cardId = sel.value;
+  var card = cards.find(function(c){return c.id===cardId;});
+  if (!card) {
+    document.getElementById('card-earn-rates').innerHTML =
+      '<div class="card" style="margin-top:0;padding:2.5rem;text-align:center">'+
+      '<div style="font-size:1.8rem;margin-bottom:.6rem;opacity:.3">◈</div>'+
+      '<div style="color:var(--muted);font-size:.9rem">No cards added yet.</div>'+
+      '<div style="color:var(--muted);font-size:.78rem;margin-top:.3rem">Add a card in the <strong style="color:var(--accent)">Inputs</strong> tab to view earn rates here.</div>'+
+      '</div>';
+    document.getElementById('card-detail-right').innerHTML = '';
+    return;
+  }
   var allCats = DEFAULT_CATS.concat(cats.filter(function(c){return DEFAULT_CATS.indexOf(c)<0;}));
 
   document.getElementById('card-earn-rates').innerHTML =
@@ -590,10 +606,7 @@ function toggleExclusion(cardId, cat, el) {
 }
 
 function resetDataToDefaults() {
-  cards.forEach(function(card){
-    var d = DC.find(function(x){return x.id===card.id;});
-    if (d) card.exclusions = d.dex.slice();
-  });
+  cards.forEach(function(card){ card.exclusions = (card.dex || []).slice(); });
   renderCardDetail();
 }
 
@@ -683,19 +696,22 @@ function resetInputs() {
   cards=JSON.parse(JSON.stringify(DC));cats=DEFAULT_CATS.slice();pv=Object.assign({},DEFAULT_PV);
   var sel=document.getElementById('data-card-select');
   if(sel){sel.innerHTML='';cards.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});}
-  renderInputsTab();initSpendInputs();populateTravelSelects();
+  renderInputsTab();initSpendInputs();populateTravelSelects();autoSave();
 }
 
 // ── Card management ───────────────────────────────────────────────────────────
 function renderCardList() {
   var el=document.getElementById('card-list');if(!el)return;el.innerHTML='';
+  if(!cards.length){
+    el.innerHTML='<div style="padding:1.2rem;text-align:center;color:var(--muted);font-size:.83rem">No cards added yet. Click <strong style="color:var(--accent)">+ Add Card</strong> above to get started.</div>';
+    return;
+  }
   var mid=Math.ceil(cards.length/2);
   var col1=document.createElement('div'),col2=document.createElement('div');
   col1.style.cssText='flex:1;min-width:0';col2.style.cssText='flex:1;min-width:0';
   cards.forEach(function(card,i){
-    var isBuiltIn=DC.some(function(dc){return dc.id===card.id;});
     var row=document.createElement('div');row.className='cat-item';
-    row.innerHTML='<div style="flex:1;min-width:0"><span style="font-weight:500">'+card.name+'</span> <span style="font-size:.71rem;color:var(--muted)">'+card.currency+'</span></div>'+(isBuiltIn?'<span class="badge badge-gold">built-in</span>':'<button class="btn-danger" onclick="removeCard(\'"+card.id+"\')">Remove</button>');
+    row.innerHTML='<div style="flex:1;min-width:0"><span style="font-weight:500">'+card.name+'</span> <span style="font-size:.71rem;color:var(--muted)">'+card.currency+'</span></div>'+'<button class="btn-danger" onclick="removeCard(\''+card.id+'\')">Remove</button>';
     (i<mid?col1:col2).appendChild(row);
   });
   var wrap=document.createElement('div');
@@ -709,7 +725,7 @@ function removeCard(cardId) {
   var inUse=new Set();cards.forEach(function(c){(c.partners||[]).forEach(function(p){inUse.add(canonical(p.name));});});
   Object.keys(pv).forEach(function(k){if(!inUse.has(k))delete pv[k];});
   var sel=document.getElementById('data-card-select');if(sel){var o=sel.querySelector('option[value="'+cardId+'"]');if(o)o.remove();}
-  renderInputsTab();populateTravelSelects();
+  renderInputsTab();populateTravelSelects();autoSave();
 }
 function openAddCardModal() {
   ['ac-name','ac-currency','ac-base','ac-partners','ac-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -722,27 +738,94 @@ async function submitAddCard() {
   var currency=(document.getElementById('ac-currency').value||'').trim();
   var baseStr=(document.getElementById('ac-base').value||'').trim();
   var ptxt=(document.getElementById('ac-partners').value||'').trim();
-  var notes=(document.getElementById('ac-notes').value||'').trim();
+  var userNotes=(document.getElementById('ac-notes').value||'').trim();
   var status=document.getElementById('ac-status');
   if(!name||!currency||!baseStr){status.textContent='Name, Currency and Base Rate are required.';status.style.color='var(--danger)';return;}
   var baseRate=parseFloat(baseStr)/100;
   if(isNaN(baseRate)||baseRate<=0){status.textContent='Base rate must be a number e.g. 2 for 2%.';status.style.color='var(--danger)';return;}
-  var pl=ptxt?ptxt.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(n){return{name:n,type:(ALLIANCE[n]?'airline':'hotel')};}):[]; 
+  var apiKey=getApiKey();
+  if(!apiKey){status.textContent='Anthropic API key required — set it via ⚙ API Key.';status.style.color='var(--danger)';openApiKeyModal();return;}
+  var manualPartners=ptxt?ptxt.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(n){var cn=canonical(n);return{name:cn,type:(ALLIANCE[cn]?'airline':'hotel')};}):[];
   var co={};DEFAULT_CATS.forEach(function(cat){co[cat]=baseRate;});
   var id='custom_'+Date.now();
-  var nc={id:id,name:name,currency:currency,baseRate:baseRate,categories:co,exclusions:[],dex:[],partners:pl,notes:notes||'User-added card.',milestones:'N/A'};
-  pl.forEach(function(p){var cn=canonical(p.name);if(pv[cn]===undefined)pv[cn]=1.0;});
-  cards.push(nc);
-  status.textContent='Looking up T\u0026Cs\u2026';status.style.color='var(--accent)';
+  var nc={id:id,name:name,currency:currency,baseRate:baseRate,forexMarkup:0.035,intlRate:baseRate,intlTravelRate:baseRate,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'',milestones:'N/A'};
+  status.textContent='Fetching T&Cs via Claude…';status.style.color='var(--accent)';
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:'Credit card "'+name+'" (rewards: '+currency+', base: '+baseStr+'% per Rs.100, India). 2-3 plain text sentences: excluded categories, earn caps, main redemption partners.'}]})});
+    var prompt='You are a credit card data assistant for Indian credit cards. Given this card, provide structured earn rates and program details from your knowledge.\n\nCard: "'+name+'"\nRewards currency: "'+currency+'"\nUser-provided base earn rate: '+baseStr+'% per Rs.100\n\nRespond with ONLY valid JSON (no markdown, no extra text):\n{\n  "baseRate": 0.02,\n  "forexMarkup": 0.035,\n  "intlRate": 0.02,\n  "intlTravelRate": 0.02,\n  "categories": {\n    "Flights": 0.02, "Hotels": 0.02, "Dining": 0.02, "Shopping": 0.02,\n    "Groceries": 0.02, "Entertainment": 0.02, "Healthcare": 0.02, "Education": 0.02,\n    "Utilities": 0.02, "Insurance": 0.02, "Fuel": 0.0, "Rent": 0.0,\n    "Government": 0.0, "Jewellery": 0.0, "Wallet Loads": 0.0, "International Transactions": 0.02\n  },\n  "exclusions": ["Fuel","Rent","Government"],\n  "partners": [{"name": "Singapore Airlines (KrisFlyer)", "type": "airline"}],\n  "notes": "Key T&C summary",\n  "milestones": "Spending milestone benefits or N/A"\n}\nRules: rates are decimal fractions (2%=0.02). exclusions = categories where no rewards earned (set those to 0.0 in categories too). partners = transfer/loyalty program partners only (not cashback), use official program names. forexMarkup 0.035 unless zero-forex card. If unknown, use reasonable defaults.';
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
     var data=await resp.json();
+    if(!resp.ok){throw new Error((data.error&&data.error.message)||'API error '+resp.status);}
     var text=(data.content||[]).map(function(b){return b.text||'';}).join('').trim();
-    if(text){nc.notes=text;status.textContent='Card added \u2713 T\u0026Cs fetched';}else{status.textContent='Card added \u2713';}
-  }catch(e){status.textContent='Card added \u2713 (T\u0026C lookup failed)';}
+    var jsonMatch=text.match(/\{[\s\S]*\}/);
+    if(jsonMatch){
+      try{
+        var parsed=JSON.parse(jsonMatch[0]);
+        if(typeof parsed.baseRate==='number')nc.baseRate=parsed.baseRate;
+        if(typeof parsed.forexMarkup==='number')nc.forexMarkup=parsed.forexMarkup;
+        if(typeof parsed.intlRate==='number')nc.intlRate=parsed.intlRate;
+        if(typeof parsed.intlTravelRate==='number')nc.intlTravelRate=parsed.intlTravelRate;
+        if(parsed.categories){DEFAULT_CATS.forEach(function(cat){if(typeof parsed.categories[cat]==='number')nc.categories[cat]=parsed.categories[cat];});}
+        if(Array.isArray(parsed.exclusions)){
+          nc.exclusions=parsed.exclusions.filter(function(c){return DEFAULT_CATS.indexOf(c)>=0;});
+          nc.dex=nc.exclusions.slice();
+        }
+        if(Array.isArray(parsed.partners)&&parsed.partners.length>0){
+          var manualNames=manualPartners.map(function(p){return p.name;});
+          parsed.partners.forEach(function(p){
+            var cn=canonical(p.name);
+            if(manualNames.indexOf(cn)<0)nc.partners.push({name:cn,type:p.type||((ALLIANCE[cn])?'airline':'hotel')});
+          });
+        }
+        if(parsed.notes)nc.notes=(userNotes?(userNotes+'\n\n'):'')+parsed.notes;
+        if(parsed.milestones)nc.milestones=parsed.milestones;
+        status.textContent='Card added ✓ T&Cs fetched';
+      }catch(pe){
+        nc.notes=(userNotes?(userNotes+'\n\n'):'')+text;
+        status.textContent='Card added ✓ (partial data)';
+      }
+    } else if(text){
+      nc.notes=(userNotes?(userNotes+'\n\n'):'')+text;
+      status.textContent='Card added ✓ (partial data)';
+    } else {
+      if(!nc.notes)nc.notes='User-added card.';
+      status.textContent='Card added ✓';
+    }
+  }catch(e){
+    console.warn('T&C fetch:',e);
+    if(!nc.notes)nc.notes=userNotes||'User-added card.';
+    status.textContent='Card added ✓ (T&C lookup failed: '+(e.message||'check API key')+')';
+  }
   status.style.color='var(--success)';
+  nc.partners.forEach(function(p){var cn=canonical(p.name);if(pv[cn]===undefined)pv[cn]=1.0;});
+  cards.push(nc);
   var sel=document.getElementById('data-card-select');if(sel){var o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);}
-  renderInputsTab();populateTravelSelects();setTimeout(closeAddCardModal,1500);
+  renderInputsTab();populateTravelSelects();autoSave();setTimeout(closeAddCardModal,1500);
+}
+
+// ── API Key management ────────────────────────────────────────────
+function getApiKey(){return localStorage.getItem('ccanalyzer_apikey')||'';}
+function openApiKeyModal(){
+  var inp=document.getElementById('apikey-input');
+  if(inp)inp.value='';
+  document.getElementById('apikey-modal').classList.remove('hidden');
+}
+function closeApiKeyModal(){document.getElementById('apikey-modal').classList.add('hidden');}
+function saveApiKey(){
+  var val=(document.getElementById('apikey-input').value||'').trim();
+  if(!val||!val.startsWith('sk-')){alert('Please enter a valid Anthropic API key (starts with sk-ant-...).'); return;}
+  localStorage.setItem('ccanalyzer_apikey',val);
+  document.getElementById('apikey-input').value='';
+  closeApiKeyModal();
+  showStatus('API key saved ✓','ok');
+}
+
+// ── Master Reset ────────────────────────────────────────────
+function masterReset(){
+  if(!cards.length){alert('No cards to remove.');return;}
+  if(!confirm('Remove all '+cards.length+' credit card(s)? This cannot be undone.'))return;
+  cards=[];
+  var sel=document.getElementById('data-card-select');if(sel)sel.innerHTML='';
+  renderInputsTab();populateTravelSelects();autoSave();
 }
 // ── Feature 2: Custom Split Redemption ────────────────────────────────────────
 function runCustomSplit() {
