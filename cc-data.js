@@ -728,7 +728,7 @@ function removeCard(cardId) {
   renderInputsTab();populateTravelSelects();autoSave();
 }
 function openAddCardModal() {
-  ['ac-name','ac-currency','ac-base','ac-partners','ac-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['ac-name','ac-currency','ac-partners','ac-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var s=document.getElementById('ac-status');if(s){s.textContent='';s.style.color='';}
   document.getElementById('add-card-modal').classList.remove('hidden');
 }
@@ -736,22 +736,19 @@ function closeAddCardModal(){document.getElementById('add-card-modal').classList
 async function submitAddCard() {
   var name=(document.getElementById('ac-name').value||'').trim();
   var currency=(document.getElementById('ac-currency').value||'').trim();
-  var baseStr=(document.getElementById('ac-base').value||'').trim();
   var ptxt=(document.getElementById('ac-partners').value||'').trim();
   var userNotes=(document.getElementById('ac-notes').value||'').trim();
   var status=document.getElementById('ac-status');
-  if(!name||!currency||!baseStr){status.textContent='Name, Currency and Base Rate are required.';status.style.color='var(--danger)';return;}
-  var baseRate=parseFloat(baseStr)/100;
-  if(isNaN(baseRate)||baseRate<=0){status.textContent='Base rate must be a number e.g. 2 for 2%.';status.style.color='var(--danger)';return;}
+  if(!name||!currency){status.textContent='Card name and rewards currency are required.';status.style.color='var(--danger)';return;}
   var apiKey=getApiKey();
   if(!apiKey){status.textContent='Gemini API key required — set it via ⚙ API Key.';status.style.color='var(--danger)';openApiKeyModal();return;}
   var manualPartners=ptxt?ptxt.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(n){var cn=canonical(n);return{name:cn,type:(ALLIANCE[cn]?'airline':'hotel')};}):[];
-  var co={};DEFAULT_CATS.forEach(function(cat){co[cat]=baseRate;});
+  var co={};DEFAULT_CATS.forEach(function(cat){co[cat]=0.02;});
   var id='custom_'+Date.now();
-  var nc={id:id,name:name,currency:currency,baseRate:baseRate,forexMarkup:0.035,intlRate:baseRate,intlTravelRate:baseRate,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'',milestones:'N/A'};
+  var nc={id:id,name:name,currency:currency,baseRate:0.02,forexMarkup:0.035,intlRate:0.02,intlTravelRate:0.02,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'',milestones:'N/A'};
   status.textContent='Fetching T&Cs via Gemini…';status.style.color='var(--accent)';
   try{
-    var prompt='You are a credit card data assistant for Indian credit cards. Given this card, provide structured earn rates and program details from your knowledge.\n\nCard: "'+name+'"\nRewards currency: "'+currency+'"\nUser-provided base earn rate: '+baseStr+'% per Rs.100\n\nRespond with ONLY valid JSON (no markdown, no extra text):\n{\n  "baseRate": 0.02,\n  "forexMarkup": 0.035,\n  "intlRate": 0.02,\n  "intlTravelRate": 0.02,\n  "categories": {\n    "Flights": 0.02, "Hotels": 0.02, "Dining": 0.02, "Shopping": 0.02,\n    "Groceries": 0.02, "Entertainment": 0.02, "Healthcare": 0.02, "Education": 0.02,\n    "Utilities": 0.02, "Insurance": 0.02, "Fuel": 0.0, "Rent": 0.0,\n    "Government": 0.0, "Jewellery": 0.0, "Wallet Loads": 0.0, "International Transactions": 0.02\n  },\n  "exclusions": ["Fuel","Rent","Government"],\n  "partners": [{"name": "Singapore Airlines (KrisFlyer)", "type": "airline"}],\n  "notes": "Key T&C summary",\n  "milestones": "Spending milestone benefits or N/A"\n}\nRules: rates are decimal fractions (2%=0.02). exclusions = categories where no rewards earned (set those to 0.0 in categories too). partners = transfer/loyalty program partners only (not cashback), use official program names. forexMarkup 0.035 unless zero-forex card. If unknown, use reasonable defaults.';
+    var prompt='You are a credit card data assistant for Indian credit cards. Look up the T&Cs and earn rates for this card from your knowledge.\n\nCard: "'+name+'"\nRewards currency: "'+currency+'"\n\nRespond with ONLY valid JSON (no markdown, no extra text):\n{\n  "baseRate": 0.02,\n  "forexMarkup": 0.035,\n  "intlRate": 0.02,\n  "intlTravelRate": 0.02,\n  "categories": {\n    "Flights": 0.02, "Hotels": 0.02, "Dining": 0.02, "Shopping": 0.02,\n    "Groceries": 0.02, "Entertainment": 0.02, "Healthcare": 0.02, "Education": 0.02,\n    "Utilities": 0.02, "Insurance": 0.02, "Fuel": 0.0, "Rent": 0.0,\n    "Government": 0.0, "Jewellery": 0.0, "Wallet Loads": 0.0, "International Transactions": 0.02\n  },\n  "exclusions": ["Fuel","Rent","Government"],\n  "partners": [{"name": "Singapore Airlines (KrisFlyer)", "type": "airline"}],\n  "notes": "Key T&C summary",\n  "milestones": "Spending milestone benefits or N/A"\n}\nRules: baseRate = the standard earn rate on general spends (decimal fraction, e.g. 2%=0.02). rates are decimal fractions. exclusions = categories where no rewards earned (set those to 0.0 in categories too). partners = transfer/loyalty program partners only (not cashback), use official program names. forexMarkup 0.035 unless zero-forex card. If unknown, use reasonable defaults for this card type.';
     var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1200,temperature:0.1}})});
     var data=await resp.json();
     if(!resp.ok){throw new Error((data.error&&data.error.message)||'API error '+resp.status);}
