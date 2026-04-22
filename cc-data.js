@@ -791,72 +791,116 @@ function submitAddCard() {
   setTimeout(closeAddCardModal,2000);
 }
 
-async function fetchAllTCs() {
-  if(!cards.length){alert('No cards added. Add cards first.');return;}
-  var apiKey=getApiKey();
-  if(!apiKey){showStatus('API key required — set it via ⚙ API Key.','err');openApiKeyModal();return;}
-  var btn=document.getElementById('btn-fetch-tcs');
-  var statusEl=document.getElementById('tc-fetch-status');
-  if(btn){btn.disabled=true;btn.textContent='Fetching…';}
-  if(statusEl){statusEl.textContent='Fetching T&Cs for '+cards.length+' card(s) via Gemini…';statusEl.style.color='var(--accent)';}
-
-  var validPartners=Object.keys(DEFAULT_PARTNER_TYPES);
-  var cardList=cards.map(function(c){return '"'+c.name+'" (currency: '+c.currency+')';}).join(', ');
-
-  var prompt='You are a credit card data assistant for Indian credit cards. Provide earn rates, exclusions and transfer partners for these cards from your knowledge.\n\nCards: '+cardList+'\n\nIMPORTANT: For each category use the HIGHEST earn rate actually achievable, including:\n- Portal/accelerated rates (e.g. HSBC Travel with Points portal: up to 12× base on hotels/flights; ICICI iShop portal: up to 12× on hotels, 6× on flights; Tata Neu NeuPass: 5% on Tata brands for Hotels/Dining/Shopping/Groceries)\n- Preferred destination / on-brand multipliers (e.g. IndusInd Avios: 6 Avios/Rs.200 = 0.03 on Flights booked at preferred partner; BOBCard Etihad: 6 miles/Rs.100 = 0.06 on direct etihad.com flights)\n- All rates as decimal fractions (2% = 0.02, 5% = 0.05)\n\nValid partner names (use ONLY these exact strings): '+validPartners.join(', ')+'\n\nRespond with ONLY valid JSON — no markdown fences, no comments:\n{"<CardName>":{"baseRate":0.02,"forexMarkup":0.035,"intlRate":0.02,"intlTravelRate":0.02,"categories":{"Flights":0.02,"Hotels":0.02,"Dining":0.02,"Shopping":0.02,"Groceries":0.02,"Entertainment":0.02,"Healthcare":0.02,"Education":0.02,"Utilities":0.02,"Insurance":0.02,"Fuel":0.0,"Rent":0.0,"Government":0.0,"Jewellery":0.0,"Wallet Loads":0.0,"International Transactions":0.02},"exclusions":["Fuel","Rent"],"partners":["Singapore Airlines (KrisFlyer)"],"notes":"2-3 sentence T&C summary including any portal/accelerated rates","milestones":"Milestone benefits or N/A"}}\nRules: exclusions = categories with 0 earn; set those to 0.0 in categories too. Only use partner names from the valid list. forexMarkup=0.0 for zero-forex cards. Use reasonable defaults for unknown cards.';
-
-  try{
-    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.1}})
+// ── Card T&C helpers ──────────────────────────────────────────────────────────
+function applyCardData(card, data) {
+  if (typeof data.baseRate === 'number') card.baseRate = data.baseRate;
+  if (typeof data.forexMarkup === 'number') card.forexMarkup = data.forexMarkup;
+  if (typeof data.intlRate === 'number') card.intlRate = data.intlRate;
+  if (typeof data.intlTravelRate === 'number') card.intlTravelRate = data.intlTravelRate;
+  if (data.categories) {
+    DEFAULT_CATS.forEach(function(cat) {
+      if (typeof data.categories[cat] === 'number') card.categories[cat] = data.categories[cat];
     });
-    var data=await resp.json();
-    if(!resp.ok){throw new Error((data.error&&data.error.message)||'API error '+resp.status);}
-    var text=((data.candidates||[])[0]||{content:{parts:[{text:''}]}}).content.parts.map(function(p){return p.text||'';}).join('').trim();
-    text=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/i,'').trim();
-    var parsed=JSON.parse(text);
-
-    var updated=0,missed=[];
-    cards.forEach(function(card){
-      var d=parsed[card.name];
-      if(!d){missed.push(card.name);return;}
-      try{
-        if(typeof d.baseRate==='number')card.baseRate=d.baseRate;
-        if(typeof d.forexMarkup==='number')card.forexMarkup=d.forexMarkup;
-        if(typeof d.intlRate==='number')card.intlRate=d.intlRate;
-        if(typeof d.intlTravelRate==='number')card.intlTravelRate=d.intlTravelRate;
-        if(d.categories){DEFAULT_CATS.forEach(function(cat){if(typeof d.categories[cat]==='number')card.categories[cat]=d.categories[cat];});}
-        if(Array.isArray(d.exclusions)){
-          card.exclusions=d.exclusions.filter(function(c){return DEFAULT_CATS.indexOf(c)>=0;});
-          card.dex=card.exclusions.slice();
-        }
-        if(Array.isArray(d.partners)){
-          card.partners=d.partners.map(function(n){
-            var cn=canonical(n);
-            return DEFAULT_PARTNER_TYPES[cn]?{name:cn,type:DEFAULT_PARTNER_TYPES[cn]}:null;
-          }).filter(Boolean);
-        }
-        if(d.notes)card.notes=d.notes;
-        if(d.milestones)card.milestones=d.milestones;
-        updated++;
-      }catch(e){missed.push(card.name);}
-    });
-
-    autoSave();
-    renderInputsTab();
-    if(document.getElementById('data-card-select').value)renderCardDetail();
-
-    var msg='T&Cs updated for '+updated+' card(s)'+(missed.length?' — not matched: '+missed.join(', '):'');
-    if(statusEl){statusEl.textContent=msg;statusEl.style.color='var(--success)';}
-    showStatus('T&Cs updated ✓','ok');
-  }catch(e){
-    console.warn('fetchAllTCs:',e);
-    var errMsg='Fetch failed: '+(e.message||'check API key');
-    if(statusEl){statusEl.textContent=errMsg;statusEl.style.color='var(--danger)';}
-    showStatus('T&C fetch failed','err');
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='⟳ Get T&Cs for Added Cards';}
   }
+  if (Array.isArray(data.exclusions)) {
+    card.exclusions = data.exclusions.filter(function(c) { return DEFAULT_CATS.indexOf(c) >= 0; });
+    card.dex = card.exclusions.slice();
+  }
+  if (Array.isArray(data.partners)) {
+    card.partners = data.partners.map(function(n) {
+      var cn = canonical(n);
+      return DEFAULT_PARTNER_TYPES[cn] ? {name: cn, type: DEFAULT_PARTNER_TYPES[cn]} : null;
+    }).filter(Boolean);
+  }
+  if (data.notes) card.notes = data.notes;
+  if (data.milestones) card.milestones = data.milestones;
+}
+
+function findBuiltin(cardName, builtins) {
+  var n = cardName.toLowerCase().trim();
+  // Exact name match first
+  var exact = builtins.find(function(b) {
+    return b.names.some(function(bn) { return bn.toLowerCase() === n; });
+  });
+  if (exact) return exact;
+  // Relaxed: either name contains the other (min 7 chars to avoid false matches)
+  return builtins.find(function(b) {
+    return b.names.some(function(bn) {
+      var bl = bn.toLowerCase();
+      return (bl.length >= 7 && n.includes(bl)) || (n.length >= 7 && bl.includes(n));
+    });
+  }) || null;
+}
+
+async function fetchAllTCs() {
+  if (!cards.length) { alert('No cards added. Add cards first.'); return; }
+  var btn = document.getElementById('btn-fetch-tcs');
+  var statusEl = document.getElementById('tc-fetch-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Fetching…'; }
+  if (statusEl) { statusEl.textContent = 'Checking local T&C database…'; statusEl.style.color = 'var(--accent)'; }
+
+  // 1. Load builtin DB
+  var builtins = [];
+  try {
+    var r = await fetch('cc-builtin.json');
+    if (r.ok) builtins = (await r.json()).cards || [];
+  } catch(e) { /* file missing or offline — continue to Gemini */ }
+
+  // 2. Apply builtins for matching cards
+  var fromBuiltin = 0, remaining = [];
+  cards.forEach(function(card) {
+    var match = findBuiltin(card.name, builtins);
+    if (match) { applyCardData(card, match); fromBuiltin++; }
+    else remaining.push(card);
+  });
+
+  // 3. Call Gemini only for cards not in the local DB
+  var fromGemini = 0, missed = [];
+  if (remaining.length > 0) {
+    var apiKey = getApiKey();
+    if (!apiKey) {
+      missed = remaining.map(function(c) { return c.name; });
+    } else {
+      try {
+        var validPartners = Object.keys(DEFAULT_PARTNER_TYPES);
+        var cardList = remaining.map(function(c) { return '"' + c.name + '" (currency: ' + c.currency + ')'; }).join(', ');
+        var prompt = 'You are a credit card data assistant for Indian credit cards. Provide earn rates, exclusions and transfer partners for these cards from your knowledge.\n\nCards: ' + cardList + '\n\nIMPORTANT: For each category use the HIGHEST earn rate actually achievable, including:\n- Portal/accelerated rates (e.g. HSBC Travel with Points portal: up to 12× base on hotels/flights; ICICI iShop portal: up to 12× on hotels, 6× on flights; Tata Neu NeuPass: 5% on Tata brands)\n- Preferred destination / on-brand multipliers (e.g. IndusInd Avios: 6 Avios/Rs.200 = 0.03 at preferred partner POS; BOBCard Etihad: 6 miles/Rs.100 = 0.06 on direct etihad.com)\n- All rates as decimal fractions (2% = 0.02)\n\nValid partner names (use ONLY these exact strings): ' + validPartners.join(', ') + '\n\nRespond with ONLY valid JSON — no markdown fences, no comments:\n{"<CardName>":{"baseRate":0.02,"forexMarkup":0.035,"intlRate":0.02,"intlTravelRate":0.02,"categories":{"Flights":0.02,"Hotels":0.02,"Dining":0.02,"Shopping":0.02,"Groceries":0.02,"Entertainment":0.02,"Healthcare":0.02,"Education":0.02,"Utilities":0.02,"Insurance":0.02,"Fuel":0.0,"Rent":0.0,"Government":0.0,"Jewellery":0.0,"Wallet Loads":0.0,"International Transactions":0.02},"exclusions":["Fuel","Rent"],"partners":["Singapore Airlines (KrisFlyer)"],"notes":"2-3 sentence T&C summary","milestones":"Milestone benefits or N/A"}}\nRules: exclusions = categories with 0 earn; set those to 0.0 in categories too. Only use partner names from the valid list. forexMarkup=0.0 for zero-forex cards.';
+        var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey), {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({contents: [{parts: [{text: prompt}]}], generationConfig: {maxOutputTokens: 8192, temperature: 0.1}})
+        });
+        var data = await resp.json();
+        if (!resp.ok) { throw new Error((data.error && data.error.message) || 'API error ' + resp.status); }
+        var text = ((data.candidates || [])[0] || {content: {parts: [{text: ''}]}}).content.parts.map(function(p) { return p.text || ''; }).join('').trim();
+        text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+        var parsed = JSON.parse(text);
+        remaining.forEach(function(card) {
+          var d = parsed[card.name];
+          if (d) { try { applyCardData(card, d); fromGemini++; } catch(e) { missed.push(card.name); } }
+          else { missed.push(card.name); }
+        });
+      } catch(e) {
+        console.warn('fetchAllTCs Gemini:', e);
+        missed = remaining.map(function(c) { return c.name; });
+        var errNote = ' (Gemini: ' + (e.message || 'error') + ')';
+        if (statusEl) { statusEl.textContent = 'Partial update' + errNote; statusEl.style.color = 'var(--danger)'; }
+      }
+    }
+  }
+
+  autoSave();
+  renderInputsTab();
+  if (document.getElementById('data-card-select').value) renderCardDetail();
+
+  var parts = [];
+  if (fromBuiltin) parts.push(fromBuiltin + ' from local DB');
+  if (fromGemini) parts.push(fromGemini + ' from Gemini');
+  var total = fromBuiltin + fromGemini;
+  var msg = 'T&Cs applied for ' + total + '/' + cards.length + ' card(s)' + (parts.length ? ' (' + parts.join(', ') + ')' : '');
+  if (missed.length) msg += ' — not found: ' + missed.join(', ');
+  if (statusEl) { statusEl.textContent = msg; statusEl.style.color = missed.length && !total ? 'var(--danger)' : 'var(--success)'; }
+  showStatus('T&Cs updated ✓', 'ok');
+  if (btn) { btn.disabled = false; btn.textContent = '⟳ Get T&Cs for Added Cards'; }
 }
 
 // ── API Key management ────────────────────────────────────────────
