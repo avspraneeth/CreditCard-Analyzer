@@ -36,6 +36,33 @@ var PARTNER_ALIASES = {
   'Qatar Airways (Privilege Club)': 'Qatar Privilege Club',
   'Qatar Airways':                  'Qatar Privilege Club',
   'IHG Rewards':                    'IHG One Rewards',
+  // Marriott-family brands all map to Marriott Bonvoy
+  'Marriott':                       'Marriott Bonvoy',
+  'Marriott Hotels':                'Marriott Bonvoy',
+  'Marriott Rewards':               'Marriott Bonvoy',
+  'Bonvoy':                         'Marriott Bonvoy',
+  'Sheraton':                       'Marriott Bonvoy',
+  'Westin':                         'Marriott Bonvoy',
+  'W Hotels':                       'Marriott Bonvoy',
+  'St. Regis':                      'Marriott Bonvoy',
+  'Ritz-Carlton':                   'Marriott Bonvoy',
+  'The Ritz-Carlton':               'Marriott Bonvoy',
+  'JW Marriott':                    'Marriott Bonvoy',
+  'Autograph Collection':           'Marriott Bonvoy',
+  'Renaissance Hotels':             'Marriott Bonvoy',
+  'Courtyard':                      'Marriott Bonvoy',
+  'Courtyard by Marriott':          'Marriott Bonvoy',
+  'Four Points by Sheraton':        'Marriott Bonvoy',
+  'Four Points':                    'Marriott Bonvoy',
+  'Le Meridien':                    'Marriott Bonvoy',
+  'Le Méridien':                    'Marriott Bonvoy',
+  'The Luxury Collection':          'Marriott Bonvoy',
+  'Luxury Collection':              'Marriott Bonvoy',
+  'Delta Hotels':                   'Marriott Bonvoy',
+  'Tribute Portfolio':              'Marriott Bonvoy',
+  'Design Hotels':                  'Marriott Bonvoy',
+  'Moxy Hotels':                    'Marriott Bonvoy',
+  'Fairfield':                      'Marriott Bonvoy',
 };
 function canonical(name) { return PARTNER_ALIASES[name] || name; }
 
@@ -202,6 +229,26 @@ var _LEGACY_DC = [
 
 var DEFAULT_CATS = ['Flights','Hotels','Dining','Shopping','Groceries','Entertainment','Healthcare','Education','Utilities','Insurance','Fuel','Rent','Government','Jewellery','Wallet Loads','International Transactions'];
 
+// Static partner list: always shown in selects and partner matrix regardless of cards added
+var DEFAULT_PARTNER_TYPES = {
+  // Airlines
+  'Aer Lingus AerClub':'airline','Air Canada Aeroplan':'airline',
+  'Air France KLM (Flying Blue)':'airline','Air India (Maharaja Club)':'airline',
+  'Asia Miles (Cathay)':'airline','British Airways (Avios)':'airline',
+  'Emirates Skywards':'airline','Ethiopian ShebaMiles':'airline',
+  'Etihad Guest':'airline','Finnair Plus':'airline','Iberia Plus':'airline',
+  'JAL Mileage Bank':'airline','Lufthansa Miles&More':'airline',
+  'Qatar Privilege Club':'airline','SAS EuroBonus':'airline',
+  'Singapore Airlines (KrisFlyer)':'airline','SpiceJet SpiceClub':'airline',
+  'Turkish Airlines (Miles&Smiles)':'airline','United MileagePlus':'airline',
+  'Vietnam Airlines (Lotusmiles)':'airline','Virgin Atlantic Flying Club':'airline',
+  // Hotels
+  'Accor Live Limitless':'hotel','Hilton Honors':'hotel',
+  'IHCL / Taj Hotels':'hotel','IHG One Rewards':'hotel',
+  'ITC Hotels':'hotel','Marriott Bonvoy':'hotel',
+  'Orchid Rewards':'hotel','Radisson Rewards':'hotel',
+};
+
 var DEFAULT_PV = {
   // Airlines (alphabetical)
   'Aer Lingus AerClub':1,'Air Canada Aeroplan':1,'Air France KLM (Flying Blue)':1,
@@ -231,15 +278,9 @@ var lastAlloc = null; var lastCardTotals = null; var lastPartnerTotals = null; v
 var intlTravelPct = 0.5; // % of international spend that is travel (flights/hotels)
 
 function getAllPartners() {
-  var seen={},r=[];
-  cards.forEach(function(c){
-    (c.partners||[]).forEach(function(p){
-      if(p.type==='cashback')return;
-      var cn=canonical(p.name);
-      if(!seen[cn]){seen[cn]=1;r.push({name:cn,type:p.type});}
-    });
+  return Object.keys(DEFAULT_PARTNER_TYPES).map(function(name) {
+    return {name: name, type: DEFAULT_PARTNER_TYPES[name]};
   });
-  return r;
 }
 // ── Core calculation helpers ──────────────────────────────────────────────────
 
@@ -664,7 +705,7 @@ function renderPartnerMatrix() {
         '<td><span class="partner-tag '+p.type+'" style="margin:0">'+p.name+'</span></td>'+
         '<td style="font-size:.71rem;color:'+(AL_COLOR[al]||'var(--muted)')+'">'+al+'</td>'+
         '<td><input type="number" min="0" step="0.05" value="'+(pv[p.name]!==undefined?pv[p.name]:'')+
-        '" placeholder="0.00" onchange="pv[\'"+ p.name +"\']=parseFloat(this.value)||0"></td>';
+        '" placeholder="0.00" onchange="pv[\'' + p.name + '\']=parseFloat(this.value)||0"></td>';
       tbody.appendChild(tr);
     });
     tbl.appendChild(tbody); col.appendChild(tbl); wrap.appendChild(col);
@@ -722,8 +763,6 @@ function renderCardList() {
 function removeCard(cardId) {
   var idx=cards.findIndex(function(c){return c.id===cardId;});if(idx<0)return;
   cards.splice(idx,1);
-  var inUse=new Set();cards.forEach(function(c){(c.partners||[]).forEach(function(p){inUse.add(canonical(p.name));});});
-  Object.keys(pv).forEach(function(k){if(!inUse.has(k))delete pv[k];});
   var sel=document.getElementById('data-card-select');if(sel){var o=sel.querySelector('option[value="'+cardId+'"]');if(o)o.remove();}
   renderInputsTab();populateTravelSelects();autoSave();
 }
