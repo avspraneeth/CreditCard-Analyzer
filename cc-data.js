@@ -772,70 +772,91 @@ function openAddCardModal() {
   document.getElementById('add-card-modal').classList.remove('hidden');
 }
 function closeAddCardModal(){document.getElementById('add-card-modal').classList.add('hidden');}
-async function submitAddCard() {
+function submitAddCard() {
   var name=(document.getElementById('ac-name').value||'').trim();
   var currency=(document.getElementById('ac-currency').value||'').trim();
   var ptxt=(document.getElementById('ac-partners').value||'').trim();
   var userNotes=(document.getElementById('ac-notes').value||'').trim();
   var status=document.getElementById('ac-status');
   if(!name||!currency){status.textContent='Card name and rewards currency are required.';status.style.color='var(--danger)';return;}
-  var apiKey=getApiKey();
-  if(!apiKey){status.textContent='Gemini API key required — set it via ⚙ API Key.';status.style.color='var(--danger)';openApiKeyModal();return;}
-  var manualPartners=ptxt?ptxt.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(n){var cn=canonical(n);return{name:cn,type:(ALLIANCE[cn]?'airline':'hotel')};}):[];
+  var manualPartners=ptxt?ptxt.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(n){var cn=canonical(n);return DEFAULT_PARTNER_TYPES[cn]?{name:cn,type:DEFAULT_PARTNER_TYPES[cn]}:null;}).filter(Boolean):[];
   var co={};DEFAULT_CATS.forEach(function(cat){co[cat]=0.02;});
   var id='custom_'+Date.now();
-  var nc={id:id,name:name,currency:currency,baseRate:0.02,forexMarkup:0.035,intlRate:0.02,intlTravelRate:0.02,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'',milestones:'N/A'};
-  status.textContent='Fetching T&Cs via Gemini…';status.style.color='var(--accent)';
+  var nc={id:id,name:name,currency:currency,baseRate:0.02,forexMarkup:0.035,intlRate:0.02,intlTravelRate:0.02,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'Earn rates pending — click "Get T&Cs for Added Cards".',milestones:'N/A'};
+  cards.push(nc);
+  var sel=document.getElementById('data-card-select');if(sel){var o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);}
+  status.textContent='Card added ✓ — click "Get T&Cs for Added Cards" to populate earn rates.';
+  status.style.color='var(--success)';
+  renderInputsTab();populateTravelSelects();autoSave();
+  setTimeout(closeAddCardModal,2000);
+}
+
+async function fetchAllTCs() {
+  if(!cards.length){alert('No cards added. Add cards first.');return;}
+  var apiKey=getApiKey();
+  if(!apiKey){showStatus('API key required — set it via ⚙ API Key.','err');openApiKeyModal();return;}
+  var btn=document.getElementById('btn-fetch-tcs');
+  var statusEl=document.getElementById('tc-fetch-status');
+  if(btn){btn.disabled=true;btn.textContent='Fetching…';}
+  if(statusEl){statusEl.textContent='Fetching T&Cs for '+cards.length+' card(s) via Gemini…';statusEl.style.color='var(--accent)';}
+
+  var validPartners=Object.keys(DEFAULT_PARTNER_TYPES);
+  var cardList=cards.map(function(c){return '"'+c.name+'" (currency: '+c.currency+')';}).join(', ');
+
+  var prompt='You are a credit card data assistant for Indian credit cards. Provide earn rates, exclusions and transfer partners for these cards from your knowledge.\n\nCards: '+cardList+'\n\nIMPORTANT: For each category use the HIGHEST earn rate actually achievable, including:\n- Portal/accelerated rates (e.g. HSBC Travel with Points portal: up to 12× base on hotels/flights; ICICI iShop portal: up to 12× on hotels, 6× on flights; Tata Neu NeuPass: 5% on Tata brands for Hotels/Dining/Shopping/Groceries)\n- Preferred destination / on-brand multipliers (e.g. IndusInd Avios: 6 Avios/Rs.200 = 0.03 on Flights booked at preferred partner; BOBCard Etihad: 6 miles/Rs.100 = 0.06 on direct etihad.com flights)\n- All rates as decimal fractions (2% = 0.02, 5% = 0.05)\n\nValid partner names (use ONLY these exact strings): '+validPartners.join(', ')+'\n\nRespond with ONLY valid JSON — no markdown fences, no comments:\n{"<CardName>":{"baseRate":0.02,"forexMarkup":0.035,"intlRate":0.02,"intlTravelRate":0.02,"categories":{"Flights":0.02,"Hotels":0.02,"Dining":0.02,"Shopping":0.02,"Groceries":0.02,"Entertainment":0.02,"Healthcare":0.02,"Education":0.02,"Utilities":0.02,"Insurance":0.02,"Fuel":0.0,"Rent":0.0,"Government":0.0,"Jewellery":0.0,"Wallet Loads":0.0,"International Transactions":0.02},"exclusions":["Fuel","Rent"],"partners":["Singapore Airlines (KrisFlyer)"],"notes":"2-3 sentence T&C summary including any portal/accelerated rates","milestones":"Milestone benefits or N/A"}}\nRules: exclusions = categories with 0 earn; set those to 0.0 in categories too. Only use partner names from the valid list. forexMarkup=0.0 for zero-forex cards. Use reasonable defaults for unknown cards.';
+
   try{
-    var prompt='You are a credit card data assistant for Indian credit cards. Look up the T&Cs and earn rates for this card from your knowledge.\n\nCard: "'+name+'"\nRewards currency: "'+currency+'"\n\nRespond with ONLY valid JSON (no markdown, no extra text):\n{\n  "baseRate": 0.02,\n  "forexMarkup": 0.035,\n  "intlRate": 0.02,\n  "intlTravelRate": 0.02,\n  "categories": {\n    "Flights": 0.02, "Hotels": 0.02, "Dining": 0.02, "Shopping": 0.02,\n    "Groceries": 0.02, "Entertainment": 0.02, "Healthcare": 0.02, "Education": 0.02,\n    "Utilities": 0.02, "Insurance": 0.02, "Fuel": 0.0, "Rent": 0.0,\n    "Government": 0.0, "Jewellery": 0.0, "Wallet Loads": 0.0, "International Transactions": 0.02\n  },\n  "exclusions": ["Fuel","Rent","Government"],\n  "partners": [{"name": "Singapore Airlines (KrisFlyer)", "type": "airline"}],\n  "notes": "Key T&C summary",\n  "milestones": "Spending milestone benefits or N/A"\n}\nRules: baseRate = the standard earn rate on general spends (decimal fraction, e.g. 2%=0.02). rates are decimal fractions. exclusions = categories where no rewards earned (set those to 0.0 in categories too). partners = transfer/loyalty program partners only (not cashback), use official program names. forexMarkup 0.035 unless zero-forex card. If unknown, use reasonable defaults for this card type.';
-    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1200,temperature:0.1}})});
+    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey),{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.1}})
+    });
     var data=await resp.json();
     if(!resp.ok){throw new Error((data.error&&data.error.message)||'API error '+resp.status);}
     var text=((data.candidates||[])[0]||{content:{parts:[{text:''}]}}).content.parts.map(function(p){return p.text||'';}).join('').trim();
-    var jsonMatch=text.match(/\{[\s\S]*\}/);
-    if(jsonMatch){
+    text=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/i,'').trim();
+    var parsed=JSON.parse(text);
+
+    var updated=0,missed=[];
+    cards.forEach(function(card){
+      var d=parsed[card.name];
+      if(!d){missed.push(card.name);return;}
       try{
-        var parsed=JSON.parse(jsonMatch[0]);
-        if(typeof parsed.baseRate==='number')nc.baseRate=parsed.baseRate;
-        if(typeof parsed.forexMarkup==='number')nc.forexMarkup=parsed.forexMarkup;
-        if(typeof parsed.intlRate==='number')nc.intlRate=parsed.intlRate;
-        if(typeof parsed.intlTravelRate==='number')nc.intlTravelRate=parsed.intlTravelRate;
-        if(parsed.categories){DEFAULT_CATS.forEach(function(cat){if(typeof parsed.categories[cat]==='number')nc.categories[cat]=parsed.categories[cat];});}
-        if(Array.isArray(parsed.exclusions)){
-          nc.exclusions=parsed.exclusions.filter(function(c){return DEFAULT_CATS.indexOf(c)>=0;});
-          nc.dex=nc.exclusions.slice();
+        if(typeof d.baseRate==='number')card.baseRate=d.baseRate;
+        if(typeof d.forexMarkup==='number')card.forexMarkup=d.forexMarkup;
+        if(typeof d.intlRate==='number')card.intlRate=d.intlRate;
+        if(typeof d.intlTravelRate==='number')card.intlTravelRate=d.intlTravelRate;
+        if(d.categories){DEFAULT_CATS.forEach(function(cat){if(typeof d.categories[cat]==='number')card.categories[cat]=d.categories[cat];});}
+        if(Array.isArray(d.exclusions)){
+          card.exclusions=d.exclusions.filter(function(c){return DEFAULT_CATS.indexOf(c)>=0;});
+          card.dex=card.exclusions.slice();
         }
-        if(Array.isArray(parsed.partners)&&parsed.partners.length>0){
-          var manualNames=manualPartners.map(function(p){return p.name;});
-          parsed.partners.forEach(function(p){
-            var cn=canonical(p.name);
-            if(manualNames.indexOf(cn)<0)nc.partners.push({name:cn,type:p.type||((ALLIANCE[cn])?'airline':'hotel')});
-          });
+        if(Array.isArray(d.partners)){
+          card.partners=d.partners.map(function(n){
+            var cn=canonical(n);
+            return DEFAULT_PARTNER_TYPES[cn]?{name:cn,type:DEFAULT_PARTNER_TYPES[cn]}:null;
+          }).filter(Boolean);
         }
-        if(parsed.notes)nc.notes=(userNotes?(userNotes+'\n\n'):'')+parsed.notes;
-        if(parsed.milestones)nc.milestones=parsed.milestones;
-        status.textContent='Card added ✓ T&Cs fetched';
-      }catch(pe){
-        nc.notes=(userNotes?(userNotes+'\n\n'):'')+text;
-        status.textContent='Card added ✓ (partial data)';
-      }
-    } else if(text){
-      nc.notes=(userNotes?(userNotes+'\n\n'):'')+text;
-      status.textContent='Card added ✓ (partial data)';
-    } else {
-      if(!nc.notes)nc.notes='User-added card.';
-      status.textContent='Card added ✓';
-    }
+        if(d.notes)card.notes=d.notes;
+        if(d.milestones)card.milestones=d.milestones;
+        updated++;
+      }catch(e){missed.push(card.name);}
+    });
+
+    autoSave();
+    renderInputsTab();
+    if(document.getElementById('data-card-select').value)renderCardDetail();
+
+    var msg='T&Cs updated for '+updated+' card(s)'+(missed.length?' — not matched: '+missed.join(', '):'');
+    if(statusEl){statusEl.textContent=msg;statusEl.style.color='var(--success)';}
+    showStatus('T&Cs updated ✓','ok');
   }catch(e){
-    console.warn('T&C fetch:',e);
-    if(!nc.notes)nc.notes=userNotes||'User-added card.';
-    status.textContent='Card added ✓ (T&C lookup failed: '+(e.message||'check API key')+')';
+    console.warn('fetchAllTCs:',e);
+    var errMsg='Fetch failed: '+(e.message||'check API key');
+    if(statusEl){statusEl.textContent=errMsg;statusEl.style.color='var(--danger)';}
+    showStatus('T&C fetch failed','err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='⟳ Get T&Cs for Added Cards';}
   }
-  status.style.color='var(--success)';
-  nc.partners.forEach(function(p){var cn=canonical(p.name);if(pv[cn]===undefined)pv[cn]=1.0;});
-  cards.push(nc);
-  var sel=document.getElementById('data-card-select');if(sel){var o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);}
-  renderInputsTab();populateTravelSelects();autoSave();setTimeout(closeAddCardModal,1500);
 }
 
 // ── API Key management ────────────────────────────────────────────
