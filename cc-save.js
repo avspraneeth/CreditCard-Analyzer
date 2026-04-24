@@ -4,7 +4,33 @@ document.addEventListener('DOMContentLoaded', function () {
   initSpendInputs();
   populateTravelSelects();
   restoreState();
+  patchBuiltinsOnLoad();
 });
+
+// Auto-patch cards with latest milestoneBonus / fee data from cc-builtin.json.
+// Only updates fields that are structural data (not user-edited earn rates).
+// Runs silently on every page load so stale localStorage state stays fresh.
+async function patchBuiltinsOnLoad() {
+  if (!cards.length) return;
+  try {
+    var r = await fetch('cc-builtin.json');
+    if (!r.ok) return;
+    var builtins = (await r.json()).cards || [];
+    var patched = 0;
+    cards.forEach(function(card) {
+      var match = (typeof findBuiltin === 'function') ? findBuiltin(card.name, builtins) : null;
+      if (!match) return;
+      if (Array.isArray(match.milestoneBonus))
+        card.milestoneBonus = JSON.parse(JSON.stringify(match.milestoneBonus));
+      if (typeof match.annualFee === 'number') card.annualFee = match.annualFee;
+      if (match.feeNote) card.feeNote = match.feeNote;
+      if (Array.isArray(match.renewalBenefits))
+        card.renewalBenefits = JSON.parse(JSON.stringify(match.renewalBenefits));
+      patched++;
+    });
+    if (patched) autoSave();
+  } catch(e) { /* offline / file missing — skip silently */ }
+}
 
 // ── State capture / apply ─────────────────────────────────────────────────────
 
