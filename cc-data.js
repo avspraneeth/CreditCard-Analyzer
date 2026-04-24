@@ -439,6 +439,57 @@ function runOptimizer() {
     totalVal+=netBestV;
   });
 
+  // ── Milestone bonuses ──────────────────────────────────────────────────────
+  var cardSpends={};
+  cats.forEach(function(cat){var a=alloc[cat];if(a&&a.card)cardSpends[a.card.id]=(cardSpends[a.card.id]||0)+(a.spend||0);});
+
+  var milestoneRows=[],totalMilestoneVal=0;
+  cards.forEach(function(card){
+    if(!card.milestoneBonus||!card.milestoneBonus.length)return;
+    var cSpend=cardSpends[card.id]||0;
+    var bp=bestPartner(card);
+    card.milestoneBonus.forEach(function(m){
+      var mVal=(m.bonusValue||0)+(m.bonusPts||0)*bp.val;
+      var met=cSpend>=m.threshold;
+      milestoneRows.push({card:card,label:m.label,value:mVal,met:met,threshold:m.threshold,shortfall:met?0:m.threshold-cSpend});
+      if(met){totalMilestoneVal+=mVal;cardTotals[card.id]=(cardTotals[card.id]||0)+mVal;}
+    });
+  });
+  totalVal+=totalMilestoneVal;
+
+  // Render milestone section
+  var msEl=document.getElementById('milestone-section');
+  if(msEl){
+    if(milestoneRows.length){
+      var COL5='1fr 1fr 80px 75px 85px';
+      var msHtml='<div class="card" style="margin-top:0;margin-bottom:0;padding:1rem 1.2rem">'+
+        '<div class="card-title" style="margin-bottom:.7rem">Milestone Benefits</div>'+
+        '<div style="display:grid;grid-template-columns:'+COL5+';gap:.3rem .7rem;align-items:center;font-size:.69rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:.35rem;border-bottom:1px solid var(--border)">'+
+        '<span>Card</span><span>Milestone</span><span>Threshold</span><span>Value</span><span>Status</span></div>';
+      milestoneRows.forEach(function(r){
+        var thr=r.threshold>=100000?'₹'+(r.threshold/100000).toFixed(1)+'L':'₹'+r.threshold.toLocaleString('en-IN');
+        var shortfallStr=r.shortfall>=100000?'₹'+(r.shortfall/100000).toFixed(1)+'L more':'₹'+Math.round(r.shortfall/1000)+'K more';
+        msHtml+='<div style="display:grid;grid-template-columns:'+COL5+';gap:.3rem .7rem;align-items:center;font-size:.78rem;padding:.35rem 0;border-bottom:1px solid rgba(42,42,58,.3)">'+
+          '<span style="font-weight:500">'+r.card.name.split(' ').slice(-2).join(' ')+'</span>'+
+          '<span style="color:var(--muted);font-size:.73rem">'+r.label+'</span>'+
+          '<span class="fm" style="color:var(--muted)">'+thr+'</span>'+
+          '<span class="fm" style="color:var(--success)">'+fmt(r.value)+'</span>'+
+          '<span style="color:'+(r.met?'var(--success)':'var(--warning)')+';font-size:.71rem">'+(r.met?'✓ Met':shortfallStr)+'</span>'+
+          '</div>';
+      });
+      if(totalMilestoneVal>0){
+        msHtml+='<div style="font-size:.78rem;padding:.45rem 0 .1rem;border-top:2px solid var(--border);font-weight:600;text-align:right;color:var(--muted)">'+
+          'Milestone value included in total: <span class="fm" style="color:var(--success)">'+fmt(totalMilestoneVal)+'</span></div>';
+      }
+      msHtml+='</div>';
+      msEl.innerHTML=msHtml;
+      msEl.style.display='block';
+    } else {
+      msEl.style.display='none';
+      msEl.innerHTML='';
+    }
+  }
+
   // Cache for Feature 2
   lastAlloc=alloc;lastCardTotals=cardTotals;lastPartnerTotals=partnerTotals;lastTotalSpend=totalSpend;
 
@@ -622,6 +673,19 @@ function renderCardDetail() {
     return '<span class="partner-tag '+p.type+'" title="Transfer ratio: '+ratioStr+'">'+p.name+' <small style="opacity:.7">'+ratioStr+'</small></span>';
   }).join('');
 
+  var milestoneHtml;
+  if (card.milestoneBonus && card.milestoneBonus.length) {
+    var bp = bestPartner(card);
+    milestoneHtml = '<table class="data-table"><thead><tr><th>Threshold</th><th>Benefit</th><th>Value ₹</th></tr></thead><tbody>'+
+      card.milestoneBonus.map(function(m){
+        var mVal = (m.bonusValue||0) + (m.bonusPts||0)*bp.val;
+        var thr = m.threshold >= 100000 ? '₹'+(m.threshold/100000).toFixed(1)+'L' : '₹'+m.threshold.toLocaleString('en-IN');
+        return '<tr><td>'+thr+'</td><td>'+m.label+'</td><td class="fm">'+(mVal>0?fmt(mVal):'—')+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  } else {
+    milestoneHtml = '<div style="font-size:.76rem;color:var(--muted);line-height:1.6">'+(card.milestones||'No milestone data available.')+'</div>';
+  }
+
   document.getElementById('card-detail-right').innerHTML =
     '<div class="card">'+
     '<div class="card-title">Settings &amp; Partners</div>'+
@@ -634,7 +698,10 @@ function renderCardDetail() {
     '<div style="margin-bottom:.9rem">'+tags+'</div>'+
     '<div style="background:var(--surface2);border-radius:7px;padding:.8rem;font-size:.76rem;color:var(--muted);line-height:1.6">'+
     '<strong style="color:var(--accent);display:block;margin-bottom:.25rem">Notes</strong>'+card.notes+
-    '<br><br><strong style="color:var(--accent);display:block;margin-bottom:.25rem">Milestones</strong>'+(card.milestones||'N/A')+
+    '</div>'+
+    '<div style="margin-top:.75rem">'+
+    '<div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.45rem">Milestone Benefits</div>'+
+    milestoneHtml+
     '</div></div>';
 }
 
@@ -731,6 +798,7 @@ function resetDashboard() {
   if(splitRwChart){splitRwChart.destroy();splitRwChart=null;}if(splitRpChart){splitRpChart.destroy();splitRpChart=null;}
   lastAlloc=null;lastCardTotals=null;lastPartnerTotals=null;lastTotalSpend=0;
   var pw=document.getElementById('partner-chart-wrap');if(pw)pw.style.display='none';
+  var ms=document.getElementById('milestone-section');if(ms){ms.style.display='none';ms.innerHTML='';}
 }
 
 function resetInputs() {
@@ -814,6 +882,7 @@ function applyCardData(card, data) {
   }
   if (data.notes) card.notes = data.notes;
   if (data.milestones) card.milestones = data.milestones;
+  if (Array.isArray(data.milestoneBonus)) card.milestoneBonus = JSON.parse(JSON.stringify(data.milestoneBonus));
 }
 
 function findBuiltin(cardName, builtins) {
