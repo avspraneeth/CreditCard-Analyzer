@@ -418,44 +418,89 @@ function runOptimizer() {
   var defAirline=document.getElementById('default-airline').value;
   var defHotel=document.getElementById('default-hotel').value;
 
-  var alloc={}, cardTotals={}, partnerTotals={}, totalVal=0;
-  cards.forEach(function(c){cardTotals[c.id]=0;});
+  // ── Helper: evaluate any cardMap {cat→card|null} including milestones ────────
+  // ALL spend on a card counts toward its milestone threshold (incl. excluded cats)
+  function evalCardMap(cardMap, scenNote) {
+    var _alloc={},_ct={},_pt={},_tv=0;
+    cards.forEach(function(c){_ct[c.id]=0;});
+    cats.forEach(function(cat){
+      var spend=spends[cat]||0,card=cardMap[cat]||null;
+      if(!spend||!card){_alloc[cat]={card:null,pts:0,value:0,spend:spend,partner:null};return;}
+      var pts=earnPts(card,cat,spend);
+      var v=calcV(card,cat,spend);
+      if(cat==='International Transactions')v=Math.max(0,v-forexCost(card,spend));
+      var bp=bestPartner(card).name;
+      _alloc[cat]={card:card,pts:pts,value:v,spend:spend,partner:bp};
+      _ct[card.id]=(_ct[card.id]||0)+v;
+      if(bp)_pt[bp]=(_pt[bp]||0)+v;
+      _tv+=v;
+    });
+    var _cs={};cards.forEach(function(c){_cs[c.id]=0;});
+    cats.forEach(function(cat){var card=cardMap[cat];if(card)_cs[card.id]=(_cs[card.id]||0)+(spends[cat]||0);});
+    var _mRows=[],_mVal=0;
+    cards.forEach(function(card){
+      if(!card.milestoneBonus||!card.milestoneBonus.length)return;
+      var cSpend=_cs[card.id]||0,bp=bestPartner(card);
+      card.milestoneBonus.forEach(function(m){
+        var mVal=(m.bonusValue||0)+(m.bonusPts||0)*bp.val;
+        var met=cSpend>=m.threshold;
+        _mRows.push({card:card,label:m.label,value:mVal,met:met,threshold:m.threshold,shortfall:met?0:m.threshold-cSpend});
+        if(met){_mVal+=mVal;_ct[card.id]=(_ct[card.id]||0)+mVal;}
+      });
+    });
+    _tv+=_mVal;
+    return{alloc:_alloc,cardTotals:_ct,partnerTotals:_pt,totalVal:_tv,milestoneRows:_mRows,milestoneVal:_mVal,note:scenNote||null};
+  }
 
+  // ── Scenario A: greedy — best earn rate per category independently ─────────
+  var greedyMap={};
   cats.forEach(function(cat){
     var spend=spends[cat]||0;
-    if(!spend){alloc[cat]={card:null,pts:0,value:0,spend:0,partner:null};return;}
-    var best=null,bestV=0,bestPts=0,bestPN=null;
-    cards.forEach(function(card){
-      var v=calcV(card,cat,spend);
-      if(v>bestV){best=card;bestV=v;bestPts=earnPts(card,cat,spend);bestPN=bestPartner(card).name;}
-    });
-    // For International Transactions, deduct forex cost to get net reward value
-    var netBestV = bestV;
-    if(cat === 'International Transactions' && best) {
-      netBestV = Math.max(0, bestV - forexCost(best, spend));
+    if(!spend){greedyMap[cat]=null;return;}
+    var bestCard=null,bestV=0;
+    cards.forEach(function(card){var v=calcV(card,cat,spend);if(v>bestV){bestCard=card;bestV=v;}});
+    greedyMap[cat]=bestCard;
+  });
+  var bestScen=evalCardMap(greedyMap,null);
+
+  // ── Scenarios B/C: concentrate spend on each milestone card ───────────────
+  // B = all-in on that card; C = shift cheapest categories to hit first unmet milestone
+  cards.forEach(function(fc){
+    if(!fc.milestoneBonus||!fc.milestoneBonus.length)return;
+    // B: all spend on fc
+    var sMap={};
+    cats.forEach(function(cat){sMap[cat]=spends[cat]>0?fc:null;});
+    var rB=evalCardMap(sMap,'All spend on '+fc.name+' to unlock milestones');
+    if(rB.totalVal>bestScen.totalVal)bestScen=rB;
+    // C: greedy + cheapest category shifts to reach first unmet milestone
+    var fcGreedySpend=0;
+    cats.forEach(function(cat){if(greedyMap[cat]===fc)fcGreedySpend+=(spends[cat]||0);});
+    var firstUnmet=null;
+    fc.milestoneBonus.forEach(function(m){if(!firstUnmet&&fcGreedySpend<m.threshold)firstUnmet=m;});
+    if(firstUnmet){
+      var gap=firstUnmet.threshold-fcGreedySpend;
+      var shiftable=[];
+      cats.forEach(function(cat){
+        var spend=spends[cat]||0;if(!spend)return;
+        var curCard=greedyMap[cat];if(curCard===fc)return;
+        var curV=curCard?calcV(curCard,cat,spend):0;
+        shiftable.push({cat:cat,spend:spend,costPerRupee:(curV-calcV(fc,cat,spend))/spend});
+      });
+      shiftable.sort(function(a,b){return a.costPerRupee-b.costPerRupee;});
+      var cMap=Object.assign({},greedyMap);
+      var shifted=0;
+      for(var i=0;i<shiftable.length&&shifted<gap;i++){cMap[shiftable[i].cat]=fc;shifted+=shiftable[i].spend;}
+      var rC=evalCardMap(cMap,'Spend shifted to '+fc.name+' to unlock '+firstUnmet.label);
+      if(rC.totalVal>bestScen.totalVal)bestScen=rC;
     }
-    alloc[cat]={card:best,pts:bestPts,value:netBestV,spend:spend,partner:bestPN};
-    if(best){cardTotals[best.id]=(cardTotals[best.id]||0)+netBestV;if(bestPN)partnerTotals[bestPN]=(partnerTotals[bestPN]||0)+netBestV;}
-    totalVal+=netBestV;
   });
 
-  // ── Milestone bonuses ──────────────────────────────────────────────────────
-  var cardSpends={};
-  cats.forEach(function(cat){var a=alloc[cat];if(a&&a.card)cardSpends[a.card.id]=(cardSpends[a.card.id]||0)+(a.spend||0);});
-
-  var milestoneRows=[],totalMilestoneVal=0;
-  cards.forEach(function(card){
-    if(!card.milestoneBonus||!card.milestoneBonus.length)return;
-    var cSpend=cardSpends[card.id]||0;
-    var bp=bestPartner(card);
-    card.milestoneBonus.forEach(function(m){
-      var mVal=(m.bonusValue||0)+(m.bonusPts||0)*bp.val;
-      var met=cSpend>=m.threshold;
-      milestoneRows.push({card:card,label:m.label,value:mVal,met:met,threshold:m.threshold,shortfall:met?0:m.threshold-cSpend});
-      if(met){totalMilestoneVal+=mVal;cardTotals[card.id]=(cardTotals[card.id]||0)+mVal;}
-    });
-  });
-  totalVal+=totalMilestoneVal;
+  var alloc=bestScen.alloc;
+  var cardTotals=bestScen.cardTotals;
+  var partnerTotals=bestScen.partnerTotals;
+  var totalVal=bestScen.totalVal;
+  var milestoneRows=bestScen.milestoneRows;
+  var totalMilestoneVal=bestScen.milestoneVal;
 
   // Render milestone section
   var msEl=document.getElementById('milestone-section');
@@ -463,7 +508,8 @@ function runOptimizer() {
     if(milestoneRows.length){
       var COL5='1fr 1fr 80px 75px 85px';
       var msHtml='<div class="card" style="margin-top:0;margin-bottom:0;padding:1rem 1.2rem">'+
-        '<div class="card-title" style="margin-bottom:.7rem">Milestone Benefits</div>'+
+        '<div class="card-title" style="margin-bottom:.4rem">Milestone Benefits</div>'+
+        (bestScen.note?'<div style="font-size:.73rem;color:var(--accent);margin-bottom:.7rem;font-style:italic">★ '+bestScen.note+'</div>':'')+
         '<div style="display:grid;grid-template-columns:'+COL5+';gap:.3rem .7rem;align-items:center;font-size:.69rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:.35rem;border-bottom:1px solid var(--border)">'+
         '<span>Card</span><span>Milestone</span><span>Threshold</span><span>Value</span><span>Status</span></div>';
       milestoneRows.forEach(function(r){
@@ -573,20 +619,31 @@ function runOptimizer() {
 function runQuickCheck() {
   var amt = parseFloat(document.getElementById('quick-amount').value)||0;
   var cat = document.getElementById('quick-category').value;
+  // For Quick Check, all spend on one card \u2192 check if any milestone threshold is crossed
   var ranked = cards.map(function(card){
     var pts = earnPts(card, cat, amt);
     var bp  = bestPartner(card);
-    return { card:card, pts:pts, value:calcV(card,cat,amt), rate:cardRate(card,cat), bestPartner:bp.name };
+    var earnVal = calcV(card, cat, amt);
+    if (cat === 'International Transactions') earnVal = Math.max(0, earnVal - forexCost(card, amt));
+    var milestoneVal = 0;
+    if (card.milestoneBonus && card.milestoneBonus.length) {
+      card.milestoneBonus.forEach(function(m){
+        if (amt >= m.threshold) milestoneVal += (m.bonusValue||0) + (m.bonusPts||0)*bp.val;
+      });
+    }
+    return { card:card, pts:pts, value:earnVal+milestoneVal, earnVal:earnVal, milestoneVal:milestoneVal, rate:cardRate(card,cat), bestPartner:bp.name };
   }).sort(function(a,b){return b.value-a.value;});
 
   var list = document.getElementById('quick-card-list'); list.innerHTML = '';
   ranked.slice(0,5).forEach(function(r,i){
     var d = document.createElement('div'); d.className = 'result-row'+(i===0?' best':'');
+    var detail = fmtPts(r.pts)+' \u00b7 '+(r.rate*100).toFixed(2)+'% earn';
+    if (r.milestoneVal > 0) detail += ' <span style="color:var(--accent3)">+ \u20b9'+Math.round(r.milestoneVal).toLocaleString('en-IN')+' milestone</span>';
     d.innerHTML =
       '<div style="display:flex;align-items:center">'+
       '<div class="rk '+(i<3?'rk'+(i+1):'rkn')+'">'+(i+1)+'</div>'+
       '<div><div class="rn">'+r.card.name+'</div>'+
-      '<div class="rd">'+fmtPts(r.pts)+' \u00b7 '+(r.rate*100).toFixed(2)+'% earn</div></div></div>'+
+      '<div class="rd">'+detail+'</div></div></div>'+
       '<div class="rv"><div class="ra">'+fmt(r.value)+'</div>'+
       '<div class="rr">'+(amt>0?(r.value/amt*100).toFixed(2)+'% return':'')+'</div></div>';
     list.appendChild(d);
