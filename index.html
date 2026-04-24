@@ -169,6 +169,8 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
       <div>
         <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.55rem">Optimized Outputs</div>
         <div class="out-panel">
+          <div class="out-metric"><span class="oml">Net Value (after fees)</span><span class="omv zero" id="o-netval">—</span></div>
+          <div class="out-metric"><span class="oml">Net Effective Rate</span><span class="omv zero" id="o-netrate">—</span></div>
           <div class="out-metric"><span class="oml">Total Reward Value (₹/yr)</span><span class="omv zero" id="o-total">—</span></div>
           <div class="out-metric"><span class="oml">Effective Reward Rate</span><span class="omv zero" id="o-rate">—</span></div>
           <div class="out-metric"><span class="oml">Best Card</span><span class="omv zero" id="o-bcard">—</span></div>
@@ -198,6 +200,7 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
       </div>
     </div>
     <div id="milestone-section" style="display:none;margin-bottom:1.2rem"></div>
+    <div id="fee-section" style="display:none;margin-bottom:1.2rem"></div>
   </div>
 
   <hr class="divider">

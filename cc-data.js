@@ -536,6 +536,58 @@ function runOptimizer() {
     }
   }
 
+  // ── Annual fees & renewal benefits ───────────────────────────────────────────
+  var usedCards=[];
+  cards.forEach(function(card){
+    var used=cats.some(function(cat){var a=alloc[cat];return a&&a.card&&a.card.id===card.id;});
+    if(used)usedCards.push(card);
+  });
+  var totalFees=0,totalRenewVal=0,feeRows=[];
+  usedCards.forEach(function(card){
+    var fee=card.annualFee||0;
+    var rv=calcRenewalVal(card);
+    totalFees+=fee;totalRenewVal+=rv;
+    feeRows.push({card:card,fee:fee,renewVal:rv,hasData:card.annualFee!==undefined});
+  });
+  var netValue=totalVal-totalFees+totalRenewVal;
+  var someUnknown=usedCards.some(function(c){return c.annualFee===undefined;});
+
+  var feeEl=document.getElementById('fee-section');
+  if(feeEl){
+    if(feeRows.length&&(totalFees>0||totalRenewVal>0)){
+      var FC='1fr 80px 90px 80px';
+      var fHtml='<div class="card" style="margin-top:0;margin-bottom:0;padding:1rem 1.2rem">'+
+        '<div class="card-title" style="margin-bottom:.4rem">Annual Fees &amp; Renewal Benefits</div>'+
+        '<div style="display:grid;grid-template-columns:'+FC+';gap:.3rem .7rem;font-size:.69rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:.35rem;border-bottom:1px solid var(--border)">'+
+        '<span>Card</span><span class="fm">Annual Fee</span><span class="fm">Renewal Benefit</span><span class="fm">Net</span></div>';
+      feeRows.forEach(function(r){
+        var fStr=r.hasData?(r.fee>0?'−'+fmt(r.fee):'₹0'):'—';
+        var rvStr=r.renewVal>0?'+'+fmt(r.renewVal):'—';
+        var net=r.renewVal-r.fee;
+        var netStr=net===0?'—':(net>0?'+':'−')+fmt(Math.abs(net));
+        fHtml+='<div style="display:grid;grid-template-columns:'+FC+';gap:.3rem .7rem;font-size:.78rem;padding:.35rem 0;border-bottom:1px solid rgba(42,42,58,.3);align-items:center">'+
+          '<span style="font-size:.74rem">'+r.card.name.split(' ').slice(-2).join(' ')+'</span>'+
+          '<span class="fm" style="color:'+(r.fee>0?'var(--danger)':'var(--muted)')+'">'+fStr+'</span>'+
+          '<span class="fm" style="color:'+(r.renewVal>0?'var(--success)':'var(--muted)')+'">'+rvStr+'</span>'+
+          '<span class="fm" style="color:'+(net>=0?'var(--success)':'var(--danger)')+'">'+netStr+'</span>'+
+          '</div>';
+      });
+      var tn=totalRenewVal-totalFees;
+      var tnStr=(tn>0?'+':'−')+fmt(Math.abs(tn));
+      fHtml+='<div style="display:grid;grid-template-columns:'+FC+';gap:.3rem .7rem;font-size:.78rem;padding:.45rem 0 .1rem;border-top:2px solid var(--border);font-weight:600;align-items:center">'+
+        '<span style="color:var(--muted)">TOTAL</span>'+
+        '<span class="fm" style="color:var(--danger)">−'+fmt(totalFees)+'</span>'+
+        '<span class="fm" style="color:'+(totalRenewVal>0?'var(--success)':'var(--muted)')+'">'+
+        (totalRenewVal>0?'+'+fmt(totalRenewVal):'—')+'</span>'+
+        '<span class="fm" style="color:'+(tn>=0?'var(--success)':'var(--danger)')+'">'+tnStr+'</span></div>';
+      if(someUnknown)fHtml+='<div style="font-size:.68rem;color:var(--muted);margin-top:.4rem">— = fee data unavailable; click Get T&amp;Cs to populate</div>';
+      fHtml+='</div>';
+      feeEl.innerHTML=fHtml;feeEl.style.display='block';
+    } else {
+      feeEl.style.display='none';feeEl.innerHTML='';
+    }
+  }
+
   // Cache for Feature 2
   lastAlloc=alloc;lastCardTotals=cardTotals;lastPartnerTotals=partnerTotals;lastTotalSpend=totalSpend;
 
@@ -543,6 +595,8 @@ function runOptimizer() {
   var bCard=bEntry?cards.find(function(c){return c.id===bEntry[0];}):null;
   var topCE=Object.entries(alloc).filter(function(e){return e[1].value>0;}).sort(function(a,b){return b[1].value-a[1].value;})[0];
 
+  setOut('o-netval',fmt(netValue),netValue<=0);
+  setOut('o-netrate',totalSpend>0?(netValue/totalSpend*100).toFixed(2)+'%':'—',netValue<=0);
   setOut('o-total',fmt(totalVal),totalVal===0);
   setOut('o-rate',totalSpend>0?(totalVal/totalSpend*100).toFixed(2)+'%':'—',totalVal===0);
   setOut('o-bcard',bCard?bCard.name.split(' ').slice(-2).join(' '):'—',!bCard);
@@ -854,7 +908,7 @@ function renderPartnerMatrix() {
 function resetDashboard() {
   cats.forEach(function(cat){var el=document.getElementById('spend-'+cat);if(el){el.value='0';el.dataset.raw='0';}});
   var st=document.getElementById('spend-total-display');if(st)st.textContent='₹0';
-  ['o-total','o-rate','o-bcard','o-brate','o-topcat'].forEach(function(id){setOut(id,'—',true);});
+  ['o-netval','o-netrate','o-total','o-rate','o-bcard','o-brate','o-topcat'].forEach(function(id){setOut(id,'—',true);});
   var fp=document.getElementById('o-flight-panel');if(fp)fp.innerHTML='<span class="omv zero">—</span>';
   var hp=document.getElementById('o-hotel-panel');if(hp)hp.innerHTML='<span class="omv zero">—</span>';
   document.getElementById('optimizer-results').style.display='none';
@@ -867,6 +921,7 @@ function resetDashboard() {
   lastAlloc=null;lastCardTotals=null;lastPartnerTotals=null;lastTotalSpend=0;
   var pw=document.getElementById('partner-chart-wrap');if(pw)pw.style.display='none';
   var ms=document.getElementById('milestone-section');if(ms){ms.style.display='none';ms.innerHTML='';}
+  var fs=document.getElementById('fee-section');if(fs){fs.style.display='none';fs.innerHTML='';}
 }
 
 function resetInputs() {
@@ -951,6 +1006,22 @@ function applyCardData(card, data) {
   if (data.notes) card.notes = data.notes;
   if (data.milestones) card.milestones = data.milestones;
   if (Array.isArray(data.milestoneBonus)) card.milestoneBonus = JSON.parse(JSON.stringify(data.milestoneBonus));
+  if (typeof data.annualFee === 'number') card.annualFee = data.annualFee;
+  if (data.feeNote) card.feeNote = data.feeNote;
+  if (Array.isArray(data.renewalBenefits)) card.renewalBenefits = JSON.parse(JSON.stringify(data.renewalBenefits));
+}
+
+function calcRenewalVal(card) {
+  if (!card.renewalBenefits || !card.renewalBenefits.length) return 0;
+  var total = 0;
+  card.renewalBenefits.forEach(function(rb) {
+    total += (rb.bonusValue || 0);
+    if (rb.bonusPts && rb.partner) {
+      var cn = canonical(rb.partner);
+      total += rb.bonusPts * (pv[cn] || 0) * transferRatio(card.id, cn);
+    }
+  });
+  return total;
 }
 
 function findBuiltin(cardName, builtins) {
