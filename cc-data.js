@@ -164,6 +164,21 @@ function patchCardsFromBuiltins() {
   });
 }
 
+// Returns milestoneBonus array for a card — uses card's own data if set,
+// otherwise falls back to BUILTIN_CARD_INFO by name match.
+// This ensures milestones are always evaluated even on stale/unpatched card objects.
+function getEffectiveMilestones(card) {
+  if (card.milestoneBonus && card.milestoneBonus.length) return card.milestoneBonus;
+  var n = card.name.toLowerCase().trim();
+  var match = BUILTIN_CARD_INFO.find(function(b) {
+    return b.names.some(function(bn) {
+      var bl = bn.toLowerCase();
+      return bl === n || (bl.length >= 7 && n.includes(bl)) || (n.length >= 7 && bl.includes(n));
+    });
+  });
+  return (match && Array.isArray(match.milestoneBonus)) ? match.milestoneBonus : [];
+}
+
 var DC = [];
 var _LEGACY_DC = [
   {id:'axis_vistara',name:'Axis Vistara Infinite',currency:'CV Points / Air India Miles',baseRate:6/200,forexMarkup:0.035,intlRate:0.03,intlTravelRate:0.03,
@@ -513,9 +528,10 @@ function evalCardMap(cardMap, spends, scenNote) {
   cats.forEach(function(cat){var card=cardMap[cat];if(card)_cs[card.id]=(_cs[card.id]||0)+(spends[cat]||0);});
   var _mRows=[],_mVal=0;
   cards.forEach(function(card){
-    if(!card.milestoneBonus||!card.milestoneBonus.length)return;
+    var mb=getEffectiveMilestones(card);
+    if(!mb.length)return;
     var cSpend=_cs[card.id]||0,bp=bestPartner(card);
-    card.milestoneBonus.forEach(function(m){
+    mb.forEach(function(m){
       var mVal=(m.bonusValue||0)+(m.bonusPts||0)*bp.val;
       var met=cSpend>=m.threshold;
       _mRows.push({card:card,label:m.label,value:mVal,met:met,threshold:m.threshold,shortfall:met?0:m.threshold-cSpend});
@@ -549,7 +565,8 @@ function runOptimizer() {
   // ── Scenarios B/C: concentrate spend on each milestone card ───────────────
   // B = all-in on that card; C = shift cheapest categories to hit first unmet milestone
   cards.forEach(function(fc){
-    if(!fc.milestoneBonus||!fc.milestoneBonus.length)return;
+    var fcMB=getEffectiveMilestones(fc);
+    if(!fcMB.length)return;
     // B: all spend on fc
     var sMap={};
     cats.forEach(function(cat){sMap[cat]=spends[cat]>0?fc:null;});
@@ -559,7 +576,7 @@ function runOptimizer() {
     var fcGreedySpend=0;
     cats.forEach(function(cat){if(greedyMap[cat]===fc)fcGreedySpend+=(spends[cat]||0);});
     var firstUnmet=null;
-    fc.milestoneBonus.forEach(function(m){if(!firstUnmet&&fcGreedySpend<m.threshold)firstUnmet=m;});
+    fcMB.forEach(function(m){if(!firstUnmet&&fcGreedySpend<m.threshold)firstUnmet=m;});
     if(firstUnmet){
       var gap=firstUnmet.threshold-fcGreedySpend;
       var shiftable=[];
