@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
   initSpendInputs();
   populateTravelSelects();
   restoreState();
+  if (typeof patchCardsFromBuiltins === 'function') {
+    patchCardsFromBuiltins();
+    autoSave();
+  }
   patchBuiltinsOnLoad();
 });
 

@@ -81,6 +81,89 @@ var ALLIANCE = {
 
 
 
+// Static milestone/fee data for builtin cards — always available synchronously.
+// Keyed by names array (same matching logic as findBuiltin).
+var BUILTIN_CARD_INFO = [
+  {names:["IndusInd Avios Infinite","IndusInd Avios","IndusInd Bank Avios Infinite"],
+   milestoneBonus:[{threshold:800000,bonusPts:18000,label:"18,000 bonus Avios at Rs.8L annual spend"}],
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.10L spend",renewalBenefits:[]},
+  {names:["BOBCard Etihad Guest Premier","BobCard Etihad Guest Premier","Bank of Baroda Etihad Guest Premier","BOB Etihad Guest Premier","BOB Etihad"],
+   milestoneBonus:[],
+   annualFee:5899,feeNote:"Rs.4,999 + 18% GST",
+   renewalBenefits:[{bonusPts:5000,partner:"Etihad Guest",label:"5,000 Etihad miles on card anniversary"}]},
+  {names:["ICICI Emirates Emeralde","ICICI Emirates","Emirates Emeralde","ICICI Bank Emirates Emeralde"],
+   milestoneBonus:[],
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
+   renewalBenefits:[{bonusPts:5000,partner:"Emirates Skywards",label:"5,000 Emirates Skywards miles on card anniversary"}]},
+  {names:["ICICI Times Black","Times Black","ICICI Bank Times Black"],
+   milestoneBonus:[
+     {threshold:200000,bonusValue:10000,label:"₹10,000 Klook voucher at Rs.2L spend"},
+     {threshold:500000,bonusValue:2500,label:"₹2,500 mobility wallet credit at Rs.5L spend"}
+   ],
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",renewalBenefits:[]},
+  {names:["American Express Platinum Travel","Amex Platinum Travel","Amex Plat Travel","AmEx Platinum Travel"],
+   milestoneBonus:[
+     {threshold:190000,bonusPts:7500,label:"7,500 bonus MR at Rs.1.9L spend"},
+     {threshold:400000,bonusPts:10000,label:"10,000 bonus MR at Rs.4L spend"},
+     {threshold:700000,bonusPts:22500,bonusValue:10000,label:"22,500 bonus MR + ₹10,000 Taj voucher at Rs.7L spend"}
+   ],
+   annualFee:4130,feeNote:"Rs.3,500 + 18% GST",renewalBenefits:[]},
+  {names:["American Express Platinum Reserve","Amex Platinum Reserve","Amex Plat Reserve","AmEx Platinum Reserve"],
+   milestoneBonus:[],
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",renewalBenefits:[]},
+  {names:["Axis Atlas","Axis Bank Atlas","Axis Atlas Credit Card"],
+   milestoneBonus:[{threshold:300000,bonusPts:2500,label:"2,500 bonus EDGE miles at Rs.3L spend"}],
+   annualFee:5900,feeNote:"Rs.5,000 + 18% GST; waived at Rs.7.5L spend",renewalBenefits:[]},
+  {names:["Axis Vistara Infinite","Axis Vistara","Axis Bank Vistara Infinite","Axis Bank Vistara"],
+   milestoneBonus:[
+     {threshold:100000,bonusPts:10000,label:"10,000 bonus CV Points at Rs.1L spend"},
+     {threshold:250000,bonusValue:20000,label:"Business Class ticket voucher at Rs.2.5L spend"},
+     {threshold:500000,bonusValue:20000,label:"Business Class ticket voucher at Rs.5L spend"},
+     {threshold:750000,bonusValue:20000,label:"Business Class ticket voucher at Rs.7.5L spend"},
+     {threshold:1200000,bonusValue:20000,label:"Business Class ticket voucher at Rs.12L spend"}
+   ],
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.12L spend",renewalBenefits:[]},
+  {names:["HSBC TravelOne","HSBC Travel One","HSBC TravelOne Credit Card"],
+   milestoneBonus:[{threshold:1200000,bonusPts:10000,label:"10,000 bonus points at Rs.12L annual spend"}],
+   annualFee:5899,feeNote:"Rs.4,999 + 18% GST; waived at Rs.8L spend",renewalBenefits:[]},
+  {names:["HSBC Premier","HSBC Premier Mastercard","HSBC Premier Credit Card"],
+   milestoneBonus:[],
+   annualFee:0,feeNote:"Complimentary for HSBC Premier banking customers",renewalBenefits:[]},
+  {names:["HDFC Marriott Bonvoy","HDFC Marriott","HDFC Bank Marriott Bonvoy"],
+   milestoneBonus:[
+     {threshold:600000,bonusValue:8000,label:"1 Free Night Award at Rs.6L spend"},
+     {threshold:900000,bonusValue:8000,label:"2nd Free Night Award at Rs.9L spend"},
+     {threshold:1500000,bonusValue:16000,label:"3rd + 4th Free Night Awards at Rs.15L spend"}
+   ],
+   annualFee:3540,feeNote:"Rs.3,000 + 18% GST",renewalBenefits:[]},
+  {names:["HDFC Tata Neu Infinity","HDFC Tata Neu","Tata Neu Infinity","Tata Neu Infinity HDFC"],
+   milestoneBonus:[],
+   annualFee:1769,feeNote:"Rs.1,499 + 18% GST; waived at Rs.3L spend",renewalBenefits:[]},
+  {names:["ICICI MakeMyTrip","ICICI MMT","MakeMyTrip ICICI","ICICI Bank MakeMyTrip"],
+   milestoneBonus:[],
+   annualFee:1179,feeNote:"Rs.999 + 18% GST",renewalBenefits:[]}
+];
+
+function patchCardsFromBuiltins() {
+  if (!cards.length) return;
+  cards.forEach(function(card) {
+    var n = card.name.toLowerCase().trim();
+    var match = BUILTIN_CARD_INFO.find(function(b) {
+      return b.names.some(function(bn) {
+        var bl = bn.toLowerCase();
+        return bl === n || (bl.length >= 7 && n.includes(bl)) || (n.length >= 7 && bl.includes(n));
+      });
+    });
+    if (!match) return;
+    if (Array.isArray(match.milestoneBonus))
+      card.milestoneBonus = JSON.parse(JSON.stringify(match.milestoneBonus));
+    if (typeof match.annualFee === 'number') card.annualFee = match.annualFee;
+    if (match.feeNote) card.feeNote = match.feeNote;
+    if (Array.isArray(match.renewalBenefits))
+      card.renewalBenefits = JSON.parse(JSON.stringify(match.renewalBenefits));
+  });
+}
+
 var DC = [];
 var _LEGACY_DC = [
   {id:'axis_vistara',name:'Axis Vistara Infinite',currency:'CV Points / Air India Miles',baseRate:6/200,forexMarkup:0.035,intlRate:0.03,intlTravelRate:0.03,
