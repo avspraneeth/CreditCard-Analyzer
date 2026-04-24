@@ -33,7 +33,10 @@
       "milestones": "Rs.8L annual spend -> 18,000–25,000 bonus Avios (tier-dependent). POS at preferred partner earns double Avios.",
       "milestoneBonus": [
         {"threshold": 800000, "bonusPts": 18000, "label": "18,000 bonus Avios at Rs.8L annual spend"}
-      ]
+      ],
+      "annualFee": 11800,
+      "feeNote": "Rs.10,000 + 18% GST; waived at Rs.10L spend",
+      "renewalBenefits": []
     },
     {
       "id": "bob_etihad",
@@ -64,7 +67,10 @@
       "partners": ["Etihad Guest"],
       "notes": "0% forex markup. 6 Etihad Guest miles per Rs.100 on direct etihad.com bookings (flights). 2 miles/Rs.100 on eligible spends: hotels, entertainment, utilities, jewellery. Dining, shopping, groceries, healthcare, education, insurance, fuel, rent, government and wallet loads are excluded.",
       "milestones": "Monthly, quarterly and annual milestone bonus miles. Silver tier on first etihad.com transaction. Milestone-based lounge access.",
-      "milestoneBonus": []
+      "milestoneBonus": [],
+      "annualFee": 5899,
+      "feeNote": "Rs.4,999 + 18% GST",
+      "renewalBenefits": [{"bonusPts": 5000, "partner": "Etihad Guest", "label": "5,000 Etihad miles on card anniversary"}]
     },
     {
       "id": "icici_emirates",
@@ -95,7 +101,10 @@
       "partners": ["Emirates Skywards"],
       "notes": "2 Emirates Skywards miles per Rs.100 on general spends. 2.5 miles/Rs.100 on Emirates direct bookings. 1 mile/Rs.100 on utilities, insurance and government. 3.5% forex markup. Silver tier on activation; Gold tier on Rs.15L spend including Rs.50,000 on Emirates.com.",
       "milestones": "Rs.15L spend + Rs.50,000 on Emirates.com -> Emirates Skywards Gold Tier membership.",
-      "milestoneBonus": []
+      "milestoneBonus": [],
+      "annualFee": 11800,
+      "feeNote": "Rs.10,000 + 18% GST",
+      "renewalBenefits": [{"bonusPts": 5000, "partner": "Emirates Skywards", "label": "5,000 Emirates Skywards miles on card anniversary"}]
     },
     {
       "id": "icici_times_black",
@@ -129,7 +138,10 @@
       "milestoneBonus": [
         {"threshold": 200000, "bonusValue": 10000, "label": "₹10,000 Klook voucher at Rs.2L spend"},
         {"threshold": 500000, "bonusValue": 2500, "label": "₹2,500 mobility wallet credit at Rs.5L spend"}
-      ]
+      ],
+      "annualFee": 11800,
+      "feeNote": "Rs.10,000 + 18% GST",
+      "renewalBenefits": []
     },
     {
       "id": "amex_plat_travel",
@@ -164,7 +176,10 @@
         {"threshold": 190000, "bonusPts": 7500, "label": "7,500 bonus MR at Rs.1.9L spend"},
         {"threshold": 400000, "bonusPts": 10000, "label": "10,000 bonus MR at Rs.4L spend"},
         {"threshold": 700000, "bonusPts": 22500, "bonusValue": 10000, "label": "22,500 bonus MR + ₹10,000 Taj voucher at Rs.7L spend"}
-      ]
+      ],
+      "annualFee": 4130,
+      "feeNote": "Rs.3,500 + 18% GST",
+      "renewalBenefits": []
     },
     {
       "id": "amex_plat_reserve",
@@ -195,7 +210,10 @@
       "partners": ["British Airways (Avios)", "Emirates Skywards", "Etihad Guest", "Qatar Privilege Club", "Singapore Airlines (KrisFlyer)", "Virgin Atlantic Flying Club", "Asia Miles (Cathay)", "Accor Live Limitless"],
       "notes": "1 MR per Rs.50 (2%) on eligible spends. CAUTION: airline transfers at 2:1 (2 MR = 1 mile) — half the effective value of Amex Platinum Travel. Accor Live Limitless at 1:2 (1 MR = 2 ALL points). Complimentary Taj Epicure and Accor+ Explorer memberships. 3.5% forex.",
       "milestones": "Complimentary Accor+ Explorer membership (30% dining discount at Accor hotels). Priority Pass for international lounge access.",
-      "milestoneBonus": []
+      "milestoneBonus": [],
+      "annualFee": 11800,
+      "feeNote": "Rs.10,000 + 18% GST",
+      "renewalBenefits": []
     },
     {
       "id": "axis_atlas",
@@ -228,7 +246,10 @@
       "milestones": "Rs.3L -> 2,500 bonus miles; Rs.7.5L -> Gold tier (2× accelerator on Group A); Rs.15L -> Platinum tier.",
       "milestoneBonus": [
         {"threshold": 300000, "bonusPts": 2500, "label": "2,500 bonus EDGE miles at Rs.3L spend"}
-      ]
+      ],
+      "annualFee": 5900,
+      "feeNote": "Rs.5,000 + 18% GST; waived at Rs.7.5L spend",
+      "renewalBenefits": []
     },
     {
       "id": "axis_vistara",
@@ -265,7 +286,10 @@
         {"threshold": 500000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.5L spend"},
         {"threshold": 750000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.7.5L spend"},
         {"threshold": 1200000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.12L spend"}
-      ]
+      ],
+      "annualFee": 11800,
+      "feeNote": "Rs.10,000 + 18% GST; waived at Rs.12L spend",
+      "renewalBenefits": []
     },
     {
       "id": "hsbc_travelone",
@@ -298,7 +322,10 @@
       "milestones": "Rs.12L annual spend -> 10,000 bonus points.",
       "milestoneBonus": [
         {"threshold": 1200000, "bonusPts": 10000, "label": "10,000 bonus points at Rs.12L annual spend"}
-      ]
+      ],
+      "annualFee": 5899,
+      "feeNote": "Rs.4,999 + 18% GST; waived at Rs.8L spend",
+      "renewalBenefits": []
     },
     {
       "id": "hsbc_premier",
@@ -329,7 +356,10 @@
       "partners": ["Singapore Airlines (KrisFlyer)", "British Airways (Avios)", "Air India (Maharaja Club)", "Emirates Skywards", "Etihad Guest", "Qatar Privilege Club", "United MileagePlus", "Turkish Airlines (Miles&Smiles)", "Lufthansa Miles&More", "Air France KLM (Flying Blue)", "Vietnam Airlines (Lotusmiles)", "JAL Mileage Bank", "SAS EuroBonus", "Accor Live Limitless", "Marriott Bonvoy", "IHG One Rewards", "Hilton Honors"],
       "notes": "3 HSBC Reward Points per Rs.100 (3%) on virtually all categories. Travel with Points portal: 6× on flights (18 pts/Rs.100), 12× on hotels (36 pts/Rs.100). All points transfer 1:1 to 17+ partners. 0.99% forex. Points never expire. Utility/insurance/edu/govt combined capped Rs.1L/month. Exclusive to HSBC Premier banking customers.",
       "milestones": "Up to 12× points via HSBC Travel with Points portal. No traditional milestone structure.",
-      "milestoneBonus": []
+      "milestoneBonus": [],
+      "annualFee": 0,
+      "feeNote": "Complimentary for HSBC Premier banking customers",
+      "renewalBenefits": []
     },
     {
       "id": "hdfc_marriott",
@@ -364,7 +394,10 @@
         {"threshold": 600000, "bonusValue": 8000, "label": "1 Free Night Award at Rs.6L spend"},
         {"threshold": 900000, "bonusValue": 8000, "label": "2nd Free Night Award at Rs.9L spend"},
         {"threshold": 1500000, "bonusValue": 16000, "label": "3rd + 4th Free Night Awards at Rs.15L spend"}
-      ]
+      ],
+      "annualFee": 3540,
+      "feeNote": "Rs.3,000 + 18% GST",
+      "renewalBenefits": []
     },
     {
       "id": "hdfc_tata_neu",
@@ -395,7 +428,10 @@
       "partners": ["Air India (Maharaja Club)", "IHCL / Taj Hotels"],
       "notes": "1 NeuCoin = Rs.1 redeemable on Tata Neu app. 5% on Tata-brand spends (Air India, BigBasket, Croma, 1mg, Tata CLiQ, Taj Hotels) — requires NeuPass subscription. 1.5% on all other eligible spends. Grocery/utility/insurance NeuCoins each capped 2,000/month. NeuCoins expire 12 months from credit.",
       "milestones": "NeuPass subscription required for 5% on Tata brands. Lounge access milestone-based from Jun 2025.",
-      "milestoneBonus": []
+      "milestoneBonus": [],
+      "annualFee": 1769,
+      "feeNote": "Rs.1,499 + 18% GST; waived at Rs.3L spend",
+      "renewalBenefits": []
     },
     {
       "id": "icici_mmt",
@@ -426,7 +462,10 @@
       "partners": [],
       "notes": "1 myCash = Rs.1, redeemable ONLY on MakeMyTrip — NOT transferable to airline miles. 6% myCash on hotel bookings via MMT; 3% on flights, holidays, cabs and buses via MMT; 1% on all other eligible spends. 0.99% forex. MMTBLACK Gold status on card joining.",
       "milestones": "Rs.50,000 spend + 4 trips -> MMTBLACK Gold tier; Rs.2L spend + 4 trips -> MMTBLACK Platinum tier.",
-      "milestoneBonus": []
+      "milestoneBonus": [],
+      "annualFee": 1179,
+      "feeNote": "Rs.999 + 18% GST",
+      "renewalBenefits": []
     }
   ]
 }
