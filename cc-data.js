@@ -218,6 +218,57 @@ var DEFAULT_PV = {
   // Portal / catalogue partners
 };
 
+// ── Milestone definitions ─────────────────────────────────────────────────────
+// threshold: spend in ₹ that unlocks the tier; bonusPts: bonus card points;
+// bonusCash: flat ₹ voucher/cash credited (not points-based)
+var MILESTONES = {
+  'amex_plat_travel': [
+    {threshold:190000, bonusPts:7500,  bonusCash:0,     label:'₹1.9L → 7.5K MR'},
+    {threshold:400000, bonusPts:10000, bonusCash:0,     label:'₹4L → +10K MR'},
+    {threshold:700000, bonusPts:22500, bonusCash:10000, label:'₹7L → +22.5K MR + ₹10K Taj'}
+  ],
+  'axis_vistara': [
+    {threshold:100000,  bonusPts:10000, bonusCash:0,     label:'₹1L → 10K pts'},
+    {threshold:250000,  bonusPts:0,     bonusCash:15000, label:'₹2.5L → Biz voucher'},
+    {threshold:500000,  bonusPts:0,     bonusCash:15000, label:'₹5L → Biz voucher'},
+    {threshold:750000,  bonusPts:0,     bonusCash:15000, label:'₹7.5L → Biz voucher'},
+    {threshold:1200000, bonusPts:0,     bonusCash:15000, label:'₹12L → Biz voucher'}
+  ],
+  'indusind_avios':    [{threshold:800000,  bonusPts:18000, bonusCash:0, label:'₹8L → 18K Avios'}],
+  'hdfc_marriott': [
+    {threshold:600000,  bonusPts:15000, bonusCash:0, label:'₹6L → Free Night'},
+    {threshold:900000,  bonusPts:15000, bonusCash:0, label:'₹9L → 2nd Night'},
+    {threshold:1500000, bonusPts:30000, bonusCash:0, label:'₹15L → 3rd & 4th Night'}
+  ],
+  'hsbc_travelone':    [{threshold:1200000, bonusPts:10000, bonusCash:0, label:'₹12L → 10K pts'}],
+  'icici_times_black': [
+    {threshold:200000, bonusPts:0, bonusCash:10000, label:'₹2L → ₹10K Klook'},
+    {threshold:500000, bonusPts:0, bonusCash:5000,  label:'₹5L → ₹5K mobility'}
+  ],
+  'axis_atlas':        [{threshold:300000, bonusPts:2500, bonusCash:0, label:'₹3L → 2.5K EDGE Miles'}]
+};
+
+function milestoneBonusVal(card, spend) {
+  var ms=MILESTONES[card.id]; if(!ms) return 0;
+  var bpVal=bestPartner(card).val, total=0;
+  for(var i=0;i<ms.length;i++){
+    if(spend>=ms[i].threshold) total+=ms[i].bonusPts*bpVal+ms[i].bonusCash;
+  }
+  return total;
+}
+function milestoneBonusLabel(card, spend) {
+  var ms=MILESTONES[card.id]; if(!ms) return '';
+  var hits=[];
+  for(var i=0;i<ms.length;i++){
+    if(spend>=ms[i].threshold) hits.push(ms[i].label);
+  }
+  return hits.join('; ');
+}
+function catSplitVal(card, cat, spend) {
+  if(spend<=0) return 0;
+  return calcV(card,cat,spend)+milestoneBonusVal(card,spend);
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 var cards   = JSON.parse(JSON.stringify(DC));
 var cats    = DEFAULT_CATS.slice();
@@ -382,19 +433,60 @@ function runOptimizer() {
   cats.forEach(function(cat){
     var spend=spends[cat]||0;
     if(!spend){alloc[cat]={card:null,pts:0,value:0,spend:0,partner:null};return;}
-    var best=null,bestV=0,bestPts=0,bestPN=null;
+    // Best single card — evaluated with milestone bonus included
+    var best=null,bestV=0,bestVms=0,bestPts=0,bestPN=null;
     cards.forEach(function(card){
       var v=calcV(card,cat,spend);
-      if(v>bestV){best=card;bestV=v;bestPts=earnPts(card,cat,spend);bestPN=bestPartner(card).name;}
+      var vms=v+milestoneBonusVal(card,spend);
+      if(vms>bestVms){best=card;bestV=v;bestVms=vms;bestPts=earnPts(card,cat,spend);bestPN=bestPartner(card).name;}
     });
-    // For International Transactions, deduct forex cost to get net reward value
-    var netBestV = bestV;
-    if(cat === 'International Transactions' && best) {
-      netBestV = Math.max(0, bestV - forexCost(best, spend));
+    var netBestV=bestV,netBestVms=bestVms;
+    if(cat==='International Transactions'&&best){
+      var fc=forexCost(best,spend);
+      netBestV=Math.max(0,bestV-fc);netBestVms=Math.max(0,bestVms-fc);
     }
-    alloc[cat]={card:best,pts:bestPts,value:netBestV,spend:spend,partner:bestPN};
-    if(best){cardTotals[best.id]=(cardTotals[best.id]||0)+netBestV;if(bestPN)partnerTotals[bestPN]=(partnerTotals[bestPN]||0)+netBestV;}
-    totalVal+=netBestV;
+    // Try splitting across two cards — only useful when at least one card has milestones
+    var splitR=null,bestSplitV=netBestVms;
+    for(var pi=0;pi<cards.length;pi++){
+      for(var pj=pi+1;pj<cards.length;pj++){
+        var c1=cards[pi],c2=cards[pj];
+        var ms1=MILESTONES[c1.id]||[],ms2=MILESTONES[c2.id]||[];
+        if(!ms1.length&&!ms2.length) continue;
+        // Candidate amounts for c1: milestone thresholds of c1, (spend - thresholds of c2), plus 10%-step backstops
+        var seen={},cands=[],ca;
+        for(var s=1;s<=9;s++){ca=Math.round(spend*s/10);if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        for(var t=0;t<ms1.length;t++){ca=ms1[t].threshold;if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        for(var t=0;t<ms2.length;t++){ca=spend-ms2[t].threshold;if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        for(var k=0;k<cands.length;k++){
+          var a1=cands[k],a2=spend-a1;
+          var v1=catSplitVal(c1,cat,a1),v2=catSplitVal(c2,cat,a2);
+          if(v1+v2>bestSplitV){
+            bestSplitV=v1+v2;
+            splitR={card1:c1,spend1:a1,pts1:earnPts(c1,cat,a1),val1:v1,
+                    card2:c2,spend2:a2,pts2:earnPts(c2,cat,a2),val2:v2,
+                    partner1:bestPartner(c1).name,partner2:bestPartner(c2).name,
+                    ms1:milestoneBonusLabel(c1,a1),ms2:milestoneBonusLabel(c2,a2)};
+          }
+        }
+      }
+    }
+    if(splitR){
+      var sr=splitR;
+      alloc[cat]={card:sr.card1,pts:sr.pts1+sr.pts2,value:sr.val1+sr.val2,spend:spend,partner:sr.partner1,
+        isSplit:true,card2:sr.card2,spend1:sr.spend1,spend2:sr.spend2,
+        pts1:sr.pts1,pts2:sr.pts2,val1:sr.val1,val2:sr.val2,
+        partner1:sr.partner1,partner2:sr.partner2,ms1:sr.ms1,ms2:sr.ms2};
+      cardTotals[sr.card1.id]=(cardTotals[sr.card1.id]||0)+sr.val1;
+      cardTotals[sr.card2.id]=(cardTotals[sr.card2.id]||0)+sr.val2;
+      if(sr.partner1)partnerTotals[sr.partner1]=(partnerTotals[sr.partner1]||0)+sr.val1;
+      if(sr.partner2)partnerTotals[sr.partner2]=(partnerTotals[sr.partner2]||0)+sr.val2;
+      totalVal+=sr.val1+sr.val2;
+    } else {
+      alloc[cat]={card:best,pts:bestPts,value:netBestVms,spend:spend,partner:bestPN};
+      if(best){cardTotals[best.id]=(cardTotals[best.id]||0)+netBestVms;
+        if(bestPN)partnerTotals[bestPN]=(partnerTotals[bestPN]||0)+netBestVms;}
+      totalVal+=netBestVms;
+    }
   });
 
   // Cache for Feature 2
@@ -408,7 +500,11 @@ function runOptimizer() {
   setOut('o-rate',totalSpend>0?(totalVal/totalSpend*100).toFixed(2)+'%':'—',totalVal===0);
   setOut('o-bcard',bCard?bCard.name.split(' ').slice(-2).join(' '):'—',!bCard);
   var bCardSpend=0;
-  if(bCard){cats.forEach(function(cat){if(alloc[cat]&&alloc[cat].card&&alloc[cat].card.id===bCard.id)bCardSpend+=alloc[cat].spend||0;});}
+  if(bCard){cats.forEach(function(cat){
+    var a=alloc[cat];if(!a)return;
+    if(a.isSplit){if(a.card&&a.card.id===bCard.id)bCardSpend+=a.spend1||0;if(a.card2&&a.card2.id===bCard.id)bCardSpend+=a.spend2||0;}
+    else if(a.card&&a.card.id===bCard.id)bCardSpend+=a.spend||0;
+  });}
   var bCardVal=bEntry?bEntry[1]:0;
   setOut('o-brate',bCard&&bCardSpend>0?(bCardVal/bCardSpend*100).toFixed(2)+'%':'—',!bCard);
   setOut('o-topcat',topCE?topCE[0]+' ('+fmt(topCE[1].value)+')':'—',!topCE);
@@ -423,14 +519,28 @@ function runOptimizer() {
   var tPts=0,tVal=0,tSpend=0;
   sc.forEach(function(cat){
     var a=alloc[cat],row=document.createElement('div');
-    row.style.cssText='display:grid;grid-template-columns:'+COL6+';gap:.3rem;padding:.42rem 0;border-bottom:1px solid rgba(42,42,58,.3);font-size:.79rem;align-items:center';
-    row.innerHTML=
-      '<span style="font-weight:500">'+cat+'</span>'+
-      '<span style="font-size:.74rem;color:'+(a.card?'var(--text)':'var(--muted)')+'">'+( a.card?a.card.name:'No rewards')+'</span>'+
-      '<span class="fm" style="color:var(--muted);font-size:.74rem">'+fmt(a.spend)+'</span>'+
-      '<span class="fm" style="color:var(--accent);font-size:.74rem">'+fmtPts(a.pts)+'</span>'+
-      '<span style="font-size:.7rem;color:var(--accent3)">'+(a.partner||'—')+'</span>'+
-      '<span class="fm" style="color:var(--success)">'+fmt(a.value)+'</span>';
+    if(a.isSplit){
+      row.style.cssText='display:grid;grid-template-columns:'+COL6+';gap:.3rem;padding:.42rem 0 .38rem;border-bottom:1px solid rgba(42,42,58,.3);font-size:.79rem;align-items:start';
+      var ms1h=a.ms1?'<div style="font-size:.66rem;color:var(--accent);margin-top:.1rem">'+a.ms1+'</div>':'';
+      var ms2h=a.ms2?'<div style="font-size:.66rem;color:var(--accent);margin-top:.04rem">'+a.ms2+'</div>':'';
+      row.innerHTML=
+        '<span style="font-weight:500">'+cat+'<span class="split-tag">split</span></span>'+
+        '<span style="font-size:.73rem"><div><span style="color:var(--text)">'+a.card.name+'</span> <span style="color:var(--muted);font-size:.69rem">'+fmt(a.spend1)+'</span>'+ms1h+'</div>'+
+        '<div style="margin-top:.2rem"><span style="color:var(--text)">'+a.card2.name+'</span> <span style="color:var(--muted);font-size:.69rem">'+fmt(a.spend2)+'</span>'+ms2h+'</div></span>'+
+        '<span class="fm" style="color:var(--muted);font-size:.74rem">'+fmt(a.spend)+'</span>'+
+        '<span class="fm" style="color:var(--accent);font-size:.73rem">'+fmtPts(a.pts1)+'<div style="margin-top:.2rem">'+fmtPts(a.pts2)+'</div></span>'+
+        '<span style="font-size:.69rem;color:var(--accent3)">'+(a.partner1||'—')+'<div style="margin-top:.2rem">'+(a.partner2||'—')+'</div></span>'+
+        '<span class="fm" style="color:var(--success)">'+fmt(a.val1)+'<div style="margin-top:.2rem">'+fmt(a.val2)+'</div></span>';
+    } else {
+      row.style.cssText='display:grid;grid-template-columns:'+COL6+';gap:.3rem;padding:.42rem 0;border-bottom:1px solid rgba(42,42,58,.3);font-size:.79rem;align-items:center';
+      row.innerHTML=
+        '<span style="font-weight:500">'+cat+'</span>'+
+        '<span style="font-size:.74rem;color:'+(a.card?'var(--text)':'var(--muted)')+'">'+( a.card?a.card.name:'No rewards')+'</span>'+
+        '<span class="fm" style="color:var(--muted);font-size:.74rem">'+fmt(a.spend)+'</span>'+
+        '<span class="fm" style="color:var(--accent);font-size:.74rem">'+fmtPts(a.pts)+'</span>'+
+        '<span style="font-size:.7rem;color:var(--accent3)">'+(a.partner||'—')+'</span>'+
+        '<span class="fm" style="color:var(--success)">'+fmt(a.value)+'</span>';
+    }
     tbl.appendChild(row);
     tPts+=a.pts||0;tVal+=a.value||0;tSpend+=a.spend||0;
   });
