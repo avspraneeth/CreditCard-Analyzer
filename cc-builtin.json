@@ -405,7 +405,7 @@
         "Orchid Rewards",
         "Radisson Rewards"
       ],
-      "notes": "APRIL 2026 UPDATE: 5 EDGE Miles/Rs.100 on flights and hotels (capped Rs.2L/month travel). 2 EDGE Miles/Rs.100 on other eligible spends. Standard partners: 1 EM = 2 miles. New partners BA/Finnair/Vietnam at 2:1 ratio (2 EM = 1 mile). Marriott Bonvoy and Qatar Airways removed Apr 2026. Group A cap 30K EM/yr, Group B cap 120K EM/yr. 3.5% forex.",
+      "notes": "APRIL 2026: All airline transfers at 2:1 (2 EDGE Miles = 1 mile), incl. KrisFlyer, Aeroplan, JAL, Air India, Flying Blue. Hotel transfers (ITC, IHG, Orchid, Radisson) at 1:1. Group A cap 30K/yr, Group B cap 120K/yr.",
       "milestones": "Rs.3L->2.5K EDGE miles; Rs.7.5L->5K EDGE miles + Gold tier; Rs.15L->10K EDGE miles + Platinum tier",
       "milestoneBonus": [
         {
@@ -730,10 +730,9 @@
         "Wallet Loads"
       ],
       "partners": [
-        "Air India (Maharaja Club)",
         "IHCL / Taj Hotels"
       ],
-      "notes": "1 NeuCoin = Rs.1 redeemable on Tata Neu app. 5% on Tata-brand spends (Air India, BigBasket, Croma, 1mg, Tata CLiQ, Taj Hotels) — requires NeuPass subscription. 1.5% on all other eligible spends. Grocery/utility/insurance NeuCoins each capped 2,000/month. NeuCoins expire 12 months from credit.",
+      "notes": "1 NeuCoin = Rs.1 redeemable on Tata Neu app. 5% on Tata-brand spends (Air India, BigBasket, Croma, 1mg, Tata CLiQ, Taj Hotels) — requires NeuPass subscription. 1.5% on all other eligible spends. Grocery/utility/insurance NeuCoins each capped 2,000/month. NeuCoins expire 12 months from credit. NeuCoins cannot be transferred to Air India.",
       "milestones": "NeuPass subscription required for 5% on Tata brands. Lounge access milestone-based from Jun 2025.",
       "milestoneBonus": [],
       "annualFee": 1769,

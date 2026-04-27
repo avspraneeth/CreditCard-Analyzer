@@ -5,9 +5,10 @@
 // For most cards: 1 card point → 2 partner miles/points (ratio=2)
 // Exceptions stored here: key = cardId + '|' + partnerName
 var TRANSFER_RATIOS = {
-  'axis_atlas|British Airways (Avios)':       0.5,
-  'axis_atlas|Finnair Plus':                  0.5,
-  'axis_atlas|Vietnam Airlines (Lotusmiles)': 0.5,
+  // Axis Atlas: ALL airline transfers are 2:1 (2 EDGE Miles = 1 mile) post-devaluation.
+  // Hotel partners transfer at 1:1.
+  'axis_atlas|ITC Hotels':                    1.0,
+  'axis_atlas|IHG One Rewards':               1.0,
   'axis_atlas|Orchid Rewards':                1.0,
   'axis_atlas|Radisson Rewards':              1.0,
   // Amex Platinum Reserve: airline transfers at 2:1 (2 MR = 1 mile)
@@ -23,8 +24,8 @@ var TRANSFER_RATIOS = {
 function transferRatio(cardId, partnerName) {
   var key = cardId + '|' + partnerName;
   if (TRANSFER_RATIOS[key] !== undefined) return TRANSFER_RATIOS[key];
-  // Default: axis_atlas standard partners = 1 EM → 2 airline miles
-  if (cardId === 'axis_atlas') return 2;
+  // Default: axis_atlas = 2:1 for airline transfers (2 EDGE Miles → 1 mile)
+  if (cardId === 'axis_atlas') return 0.5;
   return 1;
 }
 // ── Partner canonical aliases ─────────────────────────────────────────────────
@@ -198,28 +199,27 @@ var _LEGACY_DC = [
    categories:{'Flights':5/100,'Hotels':5/100,'Dining':2/100,'Shopping':2/100,'Groceries':2/100,'Entertainment':2/100,'Healthcare':2/100,'Education':2/100,'Utilities':0,'Insurance':0,'Fuel':0,'Rent':0,'Government':0,'Jewellery':0,'Wallet Loads':0,'International Transactions':0.02},
    exclusions:['Utilities','Insurance','Fuel','Rent','Government','Jewellery','Wallet Loads'],dex:['Utilities','Insurance','Fuel','Rent','Government','Jewellery','Wallet Loads'],
    partners:[
-     // Group A (30K/yr cap) — legacy 1:2 ratio still intact
+     // Group A (30K/yr cap) — all at 2:1 ratio (2 EDGE Miles = 1 mile)
      {name:'Singapore Airlines (KrisFlyer)',type:'airline'},
      {name:'Air Canada Aeroplan',type:'airline'},
      {name:'JAL Mileage Bank',type:'airline'},
-     // Group A new (added Apr 2026) — 2:1 ratio (effectively 0.5x)
      {name:'British Airways (Avios)',type:'airline'},
      {name:'Finnair Plus',type:'airline'},
      {name:'Vietnam Airlines (Lotusmiles)',type:'airline'},
-     // Group B (120K/yr cap) — 1:2 ratio
+     // Group B (120K/yr cap) — all at 2:1 ratio
      {name:'Air France KLM (Flying Blue)',type:'airline'},
      {name:'Air India (Maharaja Club)',type:'airline'},
      {name:'United MileagePlus',type:'airline'},
      {name:'Turkish Airlines (Miles&Smiles)',type:'airline'},
      {name:'Ethiopian ShebaMiles',type:'airline'},
      {name:'SpiceJet SpiceClub',type:'airline'},
+     // Hotel partners at 1:1 ratio
      {name:'ITC Hotels',type:'hotel'},
      {name:'IHG One Rewards',type:'hotel'},
-     // New hotel partners (1:1 ratio)
      {name:'Orchid Rewards',type:'hotel'},
      {name:'Radisson Rewards',type:'hotel'},
    ],
-   notes:'APRIL 2026 UPDATE: Accor, Marriott Bonvoy, and Qatar Airways REMOVED. New partners BA/Finnair/Vietnam added but at poor 2:1 ratio (2 EDGE Miles = 1 mile). Standard partners (KrisFlyer, Aeroplan, JAL, Flying Blue, Air India) remain at 1:2. Group A cap 30K/yr, Group B cap 120K/yr. 5X travel capped Rs.2L/month.',
+   notes:'APRIL 2026 UPDATE: Accor, Marriott Bonvoy, and Qatar Airways REMOVED. All airline transfers at 2:1 (2 EDGE Miles = 1 mile), including KrisFlyer, Aeroplan, JAL, Air India, Flying Blue. Hotel transfers (ITC, IHG, Orchid, Radisson) at 1:1. Group A cap 30K/yr, Group B cap 120K/yr. 5X travel capped Rs.2L/month.',
    milestones:'Rs.3L->2.5K EDGE miles; Rs.7.5L->5K EDGE miles + Gold tier; Rs.15L->10K EDGE miles + Platinum tier'},
 
   {id:'indusind_avios',name:'IndusInd Avios Infinite',currency:'Avios',baseRate:3/200,forexMarkup:0.035,intlRate:0.015,intlTravelRate:0.015,
@@ -253,8 +253,8 @@ var _LEGACY_DC = [
   {id:'hdfc_tata_neu',name:'HDFC Tata Neu Infinity',currency:'NeuCoins',baseRate:1.5/100,forexMarkup:0.035,intlRate:0.015,intlTravelRate:0.015,
    categories:{'Flights':5/100,'Hotels':5/100,'Dining':5/100,'Shopping':5/100,'Groceries':5/100,'Entertainment':1.5/100,'Healthcare':5/100,'Education':1.5/100,'Utilities':1.5/100,'Insurance':1.5/100,'Fuel':0,'Rent':0,'Government':0,'Jewellery':1.5/100,'Wallet Loads':0,'International Transactions':0.015},
    exclusions:['Fuel','Rent','Government','Wallet Loads'],dex:['Fuel','Rent','Government','Wallet Loads'],
-   partners:[{name:'Air India (Maharaja Club)',type:'airline'},{name:'IHCL / Taj Hotels',type:'hotel'}],
-   notes:'1 NeuCoin = Rs.1 on Tata Neu. 5% on Tata brands requires NeuPass subscription. Grocery/utility/insurance each capped 2000 NeuCoins/month. NeuCoins expire 12 months from credit. UPI earn on RuPay variant.',
+   partners:[{name:'IHCL / Taj Hotels',type:'hotel'}],
+   notes:'1 NeuCoin = Rs.1 on Tata Neu. 5% on Tata brands requires NeuPass subscription. Grocery/utility/insurance each capped 2000 NeuCoins/month. NeuCoins expire 12 months from credit. UPI earn on RuPay variant. NeuCoins cannot be transferred to Air India.',
    milestones:'NeuPass needed for 5% on Tata brands. Lounge access milestone-based from Jun 2025.'},
 
   {id:'hdfc_marriott',name:'HDFC Marriott Bonvoy',currency:'Marriott Bonvoy Points',baseRate:2/150,forexMarkup:0.035,intlRate:0.013333333333333334,intlTravelRate:0.013333333333333334,
