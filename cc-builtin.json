@@ -4,7 +4,11 @@
   "cards": [
     {
       "id": "indusind_avios",
-      "names": ["IndusInd Avios Infinite", "IndusInd Avios", "IndusInd Bank Avios Infinite"],
+      "names": [
+        "IndusInd Avios Infinite",
+        "IndusInd Avios",
+        "IndusInd Bank Avios Infinite"
+      ],
       "baseRate": 0.015,
       "forexMarkup": 0.035,
       "intlRate": 0.015,
@@ -27,12 +31,23 @@
         "Wallet Loads": 0.015,
         "International Transactions": 0.015
       },
-      "exclusions": ["Fuel"],
-      "partners": ["British Airways (Avios)", "Qatar Privilege Club", "Iberia Plus", "Aer Lingus AerClub"],
+      "exclusions": [
+        "Fuel"
+      ],
+      "partners": [
+        "British Airways (Avios)",
+        "Qatar Privilege Club",
+        "Iberia Plus",
+        "Aer Lingus AerClub"
+      ],
       "notes": "3 Avios per Rs.200 (1.5%) on general eligible spends. 6 Avios/Rs.200 (3%) at preferred partner POS — British Airways or Qatar Airways direct bookings. 1 Avios/Rs.200 on education, utilities, insurance and government. Avios shared 1:1 across BA, Qatar, Iberia and Aer Lingus. 3.5% forex; preferred-destination transactions get reduced ~1.5% forex.",
       "milestones": "Rs.8L annual spend -> 18,000–25,000 bonus Avios (tier-dependent). POS at preferred partner earns double Avios.",
       "milestoneBonus": [
-        {"threshold": 800000, "bonusPts": 18000, "label": "18,000 bonus Avios at Rs.8L annual spend"}
+        {
+          "threshold": 800000,
+          "bonusPts": 18000,
+          "label": "18,000 bonus Avios at Rs.8L annual spend"
+        }
       ],
       "annualFee": 11800,
       "feeNote": "Rs.10,000 + 18% GST; waived at Rs.10L spend",
@@ -40,7 +55,13 @@
     },
     {
       "id": "bob_etihad",
-      "names": ["BOBCard Etihad Guest Premier", "BobCard Etihad Guest Premier", "Bank of Baroda Etihad Guest Premier", "BOB Etihad Guest Premier", "BOB Etihad"],
+      "names": [
+        "BOBCard Etihad Guest Premier",
+        "BobCard Etihad Guest Premier",
+        "Bank of Baroda Etihad Guest Premier",
+        "BOB Etihad Guest Premier",
+        "BOB Etihad"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.0,
       "intlRate": 0.02,
@@ -63,18 +84,42 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.02
       },
-      "exclusions": ["Dining", "Shopping", "Groceries", "Healthcare", "Education", "Insurance", "Fuel", "Rent", "Government", "Wallet Loads"],
-      "partners": ["Etihad Guest"],
+      "exclusions": [
+        "Dining",
+        "Shopping",
+        "Groceries",
+        "Healthcare",
+        "Education",
+        "Insurance",
+        "Fuel",
+        "Rent",
+        "Government",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Etihad Guest"
+      ],
       "notes": "0% forex markup. 6 Etihad Guest miles per Rs.100 on direct etihad.com bookings (flights). 2 miles/Rs.100 on eligible spends: hotels, entertainment, utilities, jewellery. Dining, shopping, groceries, healthcare, education, insurance, fuel, rent, government and wallet loads are excluded.",
       "milestones": "Monthly, quarterly and annual milestone bonus miles. Silver tier on first etihad.com transaction. Milestone-based lounge access.",
       "milestoneBonus": [],
       "annualFee": 5899,
       "feeNote": "Rs.4,999 + 18% GST",
-      "renewalBenefits": [{"bonusPts": 5000, "partner": "Etihad Guest", "label": "5,000 Etihad miles on card anniversary"}]
+      "renewalBenefits": [
+        {
+          "bonusPts": 5000,
+          "partner": "Etihad Guest",
+          "label": "5,000 Etihad miles on card anniversary"
+        }
+      ]
     },
     {
       "id": "icici_emirates",
-      "names": ["ICICI Emirates Emeralde", "ICICI Emirates", "Emirates Emeralde", "ICICI Bank Emirates Emeralde"],
+      "names": [
+        "ICICI Emirates Emeralde",
+        "ICICI Emirates",
+        "Emirates Emeralde",
+        "ICICI Bank Emirates Emeralde"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.035,
       "intlRate": 0.02,
@@ -97,18 +142,32 @@
         "Wallet Loads": 0.02,
         "International Transactions": 0.02
       },
-      "exclusions": ["Fuel"],
-      "partners": ["Emirates Skywards"],
+      "exclusions": [
+        "Fuel"
+      ],
+      "partners": [
+        "Emirates Skywards"
+      ],
       "notes": "2 Emirates Skywards miles per Rs.100 on general spends. 2.5 miles/Rs.100 on Emirates direct bookings. 1 mile/Rs.100 on utilities, insurance and government. 3.5% forex markup. Silver tier on activation; Gold tier on Rs.15L spend including Rs.50,000 on Emirates.com.",
       "milestones": "Rs.15L spend + Rs.50,000 on Emirates.com -> Emirates Skywards Gold Tier membership.",
       "milestoneBonus": [],
       "annualFee": 11800,
       "feeNote": "Rs.10,000 + 18% GST",
-      "renewalBenefits": [{"bonusPts": 5000, "partner": "Emirates Skywards", "label": "5,000 Emirates Skywards miles on card anniversary"}]
+      "renewalBenefits": [
+        {
+          "bonusPts": 5000,
+          "partner": "Emirates Skywards",
+          "label": "5,000 Emirates Skywards miles on card anniversary"
+        }
+      ]
     },
     {
       "id": "icici_times_black",
-      "names": ["ICICI Times Black", "Times Black", "ICICI Bank Times Black"],
+      "names": [
+        "ICICI Times Black",
+        "Times Black",
+        "ICICI Bank Times Black"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.0149,
       "intlRate": 0.025,
@@ -131,13 +190,36 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.025
       },
-      "exclusions": ["Rent", "Wallet Loads"],
-      "partners": ["Air India (Maharaja Club)"],
+      "exclusions": [
+        "Rent",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Air India (Maharaja Club)"
+      ],
       "notes": "2 pts/Rs.100 base. iShop portal: 12× on hotels (24 pts/Rs.100), 6× on flights/vouchers (12 pts/Rs.100). 2.5 pts/Rs.100 on international spends. 1.49% forex. 5,000 pts/month cap on combined utilities, insurance, education and government spends. Fuel earns points but they cannot be redeemed against fuel.",
-      "milestones": "Rs.2L -> Rs.10,000 Klook voucher; Rs.5L -> mobility wallet credit; Rs.10L, Rs.20L, Rs.25L additional milestone benefits.",
+      "milestones": "Rs.2L->Rs.10K Klook; Rs.5L->Rs.10K airport transfers; Rs.10L->Rs.10K Tata CLiQ Luxury; Rs.20L->Rs.20K Ayatana/Lohono stay; Rs.25L->fee waiver",
       "milestoneBonus": [
-        {"threshold": 200000, "bonusValue": 10000, "label": "₹10,000 Klook voucher at Rs.2L spend"},
-        {"threshold": 500000, "bonusValue": 2500, "label": "₹2,500 mobility wallet credit at Rs.5L spend"}
+        {
+          "threshold": 200000,
+          "bonusValue": 10000,
+          "label": "₹10,000 Klook voucher at Rs.2L spend"
+        },
+        {
+          "threshold": 500000,
+          "bonusValue": 10000,
+          "label": "₹10,000 airport transfer voucher at Rs.5L spend"
+        },
+        {
+          "threshold": 1000000,
+          "bonusValue": 10000,
+          "label": "₹10,000 Tata CLiQ Luxury gift card at Rs.10L spend"
+        },
+        {
+          "threshold": 2000000,
+          "bonusValue": 20000,
+          "label": "₹20,000 Ayatana/Lohono luxury stay at Rs.20L spend"
+        }
       ],
       "annualFee": 11800,
       "feeNote": "Rs.10,000 + 18% GST",
@@ -145,7 +227,12 @@
     },
     {
       "id": "amex_plat_travel",
-      "names": ["American Express Platinum Travel", "Amex Platinum Travel", "Amex Plat Travel", "AmEx Platinum Travel"],
+      "names": [
+        "American Express Platinum Travel",
+        "Amex Platinum Travel",
+        "Amex Plat Travel",
+        "AmEx Platinum Travel"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.035,
       "intlRate": 0.02,
@@ -168,14 +255,43 @@
         "Wallet Loads": 0.02,
         "International Transactions": 0.02
       },
-      "exclusions": ["Utilities", "Insurance", "Fuel"],
-      "partners": ["British Airways (Avios)", "Qatar Privilege Club", "Singapore Airlines (KrisFlyer)", "Emirates Skywards", "Virgin Atlantic Flying Club", "Air France KLM (Flying Blue)", "Asia Miles (Cathay)", "Finnair Plus", "Marriott Bonvoy", "Hilton Honors", "IHCL / Taj Hotels"],
+      "exclusions": [
+        "Utilities",
+        "Insurance",
+        "Fuel"
+      ],
+      "partners": [
+        "British Airways (Avios)",
+        "Qatar Privilege Club",
+        "Singapore Airlines (KrisFlyer)",
+        "Emirates Skywards",
+        "Virgin Atlantic Flying Club",
+        "Air France KLM (Flying Blue)",
+        "Asia Miles (Cathay)",
+        "Finnair Plus",
+        "Marriott Bonvoy",
+        "Hilton Honors",
+        "IHCL / Taj Hotels"
+      ],
       "notes": "1 Membership Reward (MR) per Rs.50 on eligible spends (2%). All airline partners transfer at 1:1 MR to miles. Hotel partners: Marriott Bonvoy, Hilton Honors, IHCL/Taj Hotels. Utilities, insurance and fuel excluded. 3.5% forex. Milestone-focused card.",
       "milestones": "Rs.1.9L spend -> 7,500 bonus MR; Rs.4L -> 10,000 MR; Rs.7L -> 22,500 MR + Rs.10,000 Taj Voucher.",
       "milestoneBonus": [
-        {"threshold": 190000, "bonusPts": 7500, "label": "7,500 bonus MR at Rs.1.9L spend"},
-        {"threshold": 400000, "bonusPts": 10000, "label": "10,000 bonus MR at Rs.4L spend"},
-        {"threshold": 700000, "bonusPts": 22500, "bonusValue": 10000, "label": "22,500 bonus MR + ₹10,000 Taj voucher at Rs.7L spend"}
+        {
+          "threshold": 190000,
+          "bonusPts": 7500,
+          "label": "7,500 bonus MR at Rs.1.9L spend"
+        },
+        {
+          "threshold": 400000,
+          "bonusPts": 10000,
+          "label": "10,000 bonus MR at Rs.4L spend"
+        },
+        {
+          "threshold": 700000,
+          "bonusPts": 22500,
+          "bonusValue": 10000,
+          "label": "22,500 bonus MR + ₹10,000 Taj voucher at Rs.7L spend"
+        }
       ],
       "annualFee": 4130,
       "feeNote": "Rs.3,500 + 18% GST",
@@ -183,7 +299,12 @@
     },
     {
       "id": "amex_plat_reserve",
-      "names": ["American Express Platinum Reserve", "Amex Platinum Reserve", "Amex Plat Reserve", "AmEx Platinum Reserve"],
+      "names": [
+        "American Express Platinum Reserve",
+        "Amex Platinum Reserve",
+        "Amex Plat Reserve",
+        "AmEx Platinum Reserve"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.035,
       "intlRate": 0.02,
@@ -206,8 +327,22 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.02
       },
-      "exclusions": ["Utilities", "Insurance", "Fuel", "Wallet Loads"],
-      "partners": ["British Airways (Avios)", "Emirates Skywards", "Etihad Guest", "Qatar Privilege Club", "Singapore Airlines (KrisFlyer)", "Virgin Atlantic Flying Club", "Asia Miles (Cathay)", "Accor Live Limitless"],
+      "exclusions": [
+        "Utilities",
+        "Insurance",
+        "Fuel",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "British Airways (Avios)",
+        "Emirates Skywards",
+        "Etihad Guest",
+        "Qatar Privilege Club",
+        "Singapore Airlines (KrisFlyer)",
+        "Virgin Atlantic Flying Club",
+        "Asia Miles (Cathay)",
+        "Accor Live Limitless"
+      ],
       "notes": "1 MR per Rs.50 (2%) on eligible spends. CAUTION: airline transfers at 2:1 (2 MR = 1 mile) — half the effective value of Amex Platinum Travel. Accor Live Limitless at 1:2 (1 MR = 2 ALL points). Complimentary Taj Epicure and Accor+ Explorer memberships. 3.5% forex.",
       "milestones": "Complimentary Accor+ Explorer membership (30% dining discount at Accor hotels). Priority Pass for international lounge access.",
       "milestoneBonus": [],
@@ -217,7 +352,11 @@
     },
     {
       "id": "axis_atlas",
-      "names": ["Axis Atlas", "Axis Bank Atlas", "Axis Atlas Credit Card"],
+      "names": [
+        "Axis Atlas",
+        "Axis Bank Atlas",
+        "Axis Atlas Credit Card"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.035,
       "intlRate": 0.02,
@@ -240,12 +379,50 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.02
       },
-      "exclusions": ["Utilities", "Insurance", "Fuel", "Rent", "Government", "Jewellery", "Wallet Loads"],
-      "partners": ["Singapore Airlines (KrisFlyer)", "Air Canada Aeroplan", "JAL Mileage Bank", "British Airways (Avios)", "Finnair Plus", "Vietnam Airlines (Lotusmiles)", "Air France KLM (Flying Blue)", "Air India (Maharaja Club)", "United MileagePlus", "Turkish Airlines (Miles&Smiles)", "Ethiopian ShebaMiles", "SpiceJet SpiceClub", "IHG One Rewards", "Orchid Rewards", "Radisson Rewards"],
+      "exclusions": [
+        "Utilities",
+        "Insurance",
+        "Fuel",
+        "Rent",
+        "Government",
+        "Jewellery",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Singapore Airlines (KrisFlyer)",
+        "Air Canada Aeroplan",
+        "JAL Mileage Bank",
+        "British Airways (Avios)",
+        "Finnair Plus",
+        "Vietnam Airlines (Lotusmiles)",
+        "Air France KLM (Flying Blue)",
+        "Air India (Maharaja Club)",
+        "United MileagePlus",
+        "Turkish Airlines (Miles&Smiles)",
+        "Ethiopian ShebaMiles",
+        "SpiceJet SpiceClub",
+        "IHG One Rewards",
+        "Orchid Rewards",
+        "Radisson Rewards"
+      ],
       "notes": "APRIL 2026 UPDATE: 5 EDGE Miles/Rs.100 on flights and hotels (capped Rs.2L/month travel). 2 EDGE Miles/Rs.100 on other eligible spends. Standard partners: 1 EM = 2 miles. New partners BA/Finnair/Vietnam at 2:1 ratio (2 EM = 1 mile). Marriott Bonvoy and Qatar Airways removed Apr 2026. Group A cap 30K EM/yr, Group B cap 120K EM/yr. 3.5% forex.",
-      "milestones": "Rs.3L -> 2,500 bonus miles; Rs.7.5L -> Gold tier (2× accelerator on Group A); Rs.15L -> Platinum tier.",
+      "milestones": "Rs.3L->2.5K EDGE miles; Rs.7.5L->5K EDGE miles + Gold tier; Rs.15L->10K EDGE miles + Platinum tier",
       "milestoneBonus": [
-        {"threshold": 300000, "bonusPts": 2500, "label": "2,500 bonus EDGE miles at Rs.3L spend"}
+        {
+          "threshold": 300000,
+          "bonusPts": 2500,
+          "label": "2,500 bonus EDGE miles at Rs.3L spend"
+        },
+        {
+          "threshold": 750000,
+          "bonusPts": 5000,
+          "label": "5,000 bonus EDGE miles + Gold tier at Rs.7.5L spend"
+        },
+        {
+          "threshold": 1500000,
+          "bonusPts": 10000,
+          "label": "10,000 bonus EDGE miles + Platinum tier at Rs.15L spend"
+        }
       ],
       "annualFee": 5900,
       "feeNote": "Rs.5,000 + 18% GST; waived at Rs.7.5L spend",
@@ -253,7 +430,12 @@
     },
     {
       "id": "axis_vistara",
-      "names": ["Axis Vistara Infinite", "Axis Vistara", "Axis Bank Vistara Infinite", "Axis Bank Vistara"],
+      "names": [
+        "Axis Vistara Infinite",
+        "Axis Vistara",
+        "Axis Bank Vistara Infinite",
+        "Axis Bank Vistara"
+      ],
       "baseRate": 0.03,
       "forexMarkup": 0.035,
       "intlRate": 0.03,
@@ -276,16 +458,46 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.03
       },
-      "exclusions": ["Utilities", "Insurance", "Fuel", "Rent", "Government", "Jewellery", "Wallet Loads"],
-      "partners": ["Air India (Maharaja Club)"],
+      "exclusions": [
+        "Utilities",
+        "Insurance",
+        "Fuel",
+        "Rent",
+        "Government",
+        "Jewellery",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Air India (Maharaja Club)"
+      ],
       "notes": "Discontinued for new applications post Vistara–Air India merger. 6 CV Points per Rs.200 (3%) on all eligible spends. 1 CV Point = 1 Air India Maharaja Club mile. Business Class ticket vouchers on milestone spend. 3.5% forex.",
       "milestones": "Rs.1L -> 10,000 bonus pts; Rs.2.5L -> Business Class voucher; Rs.5L, Rs.7.5L, Rs.12L -> additional Business Class vouchers.",
       "milestoneBonus": [
-        {"threshold": 100000, "bonusPts": 10000, "label": "10,000 bonus CV Points at Rs.1L spend"},
-        {"threshold": 250000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.2.5L spend"},
-        {"threshold": 500000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.5L spend"},
-        {"threshold": 750000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.7.5L spend"},
-        {"threshold": 1200000, "bonusValue": 20000, "label": "Business Class ticket voucher at Rs.12L spend"}
+        {
+          "threshold": 100000,
+          "bonusPts": 10000,
+          "label": "10,000 bonus CV Points at Rs.1L spend"
+        },
+        {
+          "threshold": 250000,
+          "bonusValue": 20000,
+          "label": "Business Class ticket voucher at Rs.2.5L spend"
+        },
+        {
+          "threshold": 500000,
+          "bonusValue": 20000,
+          "label": "Business Class ticket voucher at Rs.5L spend"
+        },
+        {
+          "threshold": 750000,
+          "bonusValue": 20000,
+          "label": "Business Class ticket voucher at Rs.7.5L spend"
+        },
+        {
+          "threshold": 1200000,
+          "bonusValue": 20000,
+          "label": "Business Class ticket voucher at Rs.12L spend"
+        }
       ],
       "annualFee": 11800,
       "feeNote": "Rs.10,000 + 18% GST; waived at Rs.12L spend",
@@ -293,7 +505,11 @@
     },
     {
       "id": "hsbc_travelone",
-      "names": ["HSBC TravelOne", "HSBC Travel One", "HSBC TravelOne Credit Card"],
+      "names": [
+        "HSBC TravelOne",
+        "HSBC Travel One",
+        "HSBC TravelOne Credit Card"
+      ],
       "baseRate": 0.02,
       "forexMarkup": 0.035,
       "intlRate": 0.04,
@@ -316,12 +532,42 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.04
       },
-      "exclusions": ["Education", "Utilities", "Insurance", "Fuel", "Rent", "Government", "Jewellery", "Wallet Loads"],
-      "partners": ["Singapore Airlines (KrisFlyer)", "Air India (Maharaja Club)", "British Airways (Avios)", "Qatar Privilege Club", "Air France KLM (Flying Blue)", "Etihad Guest", "United MileagePlus", "Turkish Airlines (Miles&Smiles)", "Vietnam Airlines (Lotusmiles)", "JAL Mileage Bank", "SAS EuroBonus", "Lufthansa Miles&More", "Accor Live Limitless", "Marriott Bonvoy", "IHG One Rewards", "Hilton Honors"],
+      "exclusions": [
+        "Education",
+        "Utilities",
+        "Insurance",
+        "Fuel",
+        "Rent",
+        "Government",
+        "Jewellery",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Singapore Airlines (KrisFlyer)",
+        "Air India (Maharaja Club)",
+        "British Airways (Avios)",
+        "Qatar Privilege Club",
+        "Air France KLM (Flying Blue)",
+        "Etihad Guest",
+        "United MileagePlus",
+        "Turkish Airlines (Miles&Smiles)",
+        "Vietnam Airlines (Lotusmiles)",
+        "JAL Mileage Bank",
+        "SAS EuroBonus",
+        "Lufthansa Miles&More",
+        "Accor Live Limitless",
+        "Marriott Bonvoy",
+        "IHG One Rewards",
+        "Hilton Honors"
+      ],
       "notes": "2 HSBC Reward Points per Rs.100 base. Rewards Marketplace portal: 4× flights (8 pts/Rs.100), 6× hotels (12 pts/Rs.100). 4 pts/Rs.100 on international spends. All points transfer 1:1 to 16+ partners. Portal accelerated cap 50,000 pts/year. 3.5% forex. Rs.4,999 fee waived at Rs.8L spend.",
       "milestones": "Rs.12L annual spend -> 10,000 bonus points.",
       "milestoneBonus": [
-        {"threshold": 1200000, "bonusPts": 10000, "label": "10,000 bonus points at Rs.12L annual spend"}
+        {
+          "threshold": 1200000,
+          "bonusPts": 10000,
+          "label": "10,000 bonus points at Rs.12L annual spend"
+        }
       ],
       "annualFee": 5899,
       "feeNote": "Rs.4,999 + 18% GST; waived at Rs.8L spend",
@@ -329,7 +575,11 @@
     },
     {
       "id": "hsbc_premier",
-      "names": ["HSBC Premier", "HSBC Premier Mastercard", "HSBC Premier Credit Card"],
+      "names": [
+        "HSBC Premier",
+        "HSBC Premier Mastercard",
+        "HSBC Premier Credit Card"
+      ],
       "baseRate": 0.03,
       "forexMarkup": 0.0099,
       "intlRate": 0.03,
@@ -352,8 +602,31 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.03
       },
-      "exclusions": ["Education", "Fuel", "Jewellery", "Wallet Loads"],
-      "partners": ["Singapore Airlines (KrisFlyer)", "British Airways (Avios)", "Air India (Maharaja Club)", "Emirates Skywards", "Etihad Guest", "Qatar Privilege Club", "United MileagePlus", "Turkish Airlines (Miles&Smiles)", "Lufthansa Miles&More", "Air France KLM (Flying Blue)", "Vietnam Airlines (Lotusmiles)", "JAL Mileage Bank", "SAS EuroBonus", "Accor Live Limitless", "Marriott Bonvoy", "IHG One Rewards", "Hilton Honors"],
+      "exclusions": [
+        "Education",
+        "Fuel",
+        "Jewellery",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Singapore Airlines (KrisFlyer)",
+        "British Airways (Avios)",
+        "Air India (Maharaja Club)",
+        "Emirates Skywards",
+        "Etihad Guest",
+        "Qatar Privilege Club",
+        "United MileagePlus",
+        "Turkish Airlines (Miles&Smiles)",
+        "Lufthansa Miles&More",
+        "Air France KLM (Flying Blue)",
+        "Vietnam Airlines (Lotusmiles)",
+        "JAL Mileage Bank",
+        "SAS EuroBonus",
+        "Accor Live Limitless",
+        "Marriott Bonvoy",
+        "IHG One Rewards",
+        "Hilton Honors"
+      ],
       "notes": "3 HSBC Reward Points per Rs.100 (3%) on virtually all categories. Travel with Points portal: 6× on flights (18 pts/Rs.100), 12× on hotels (36 pts/Rs.100). All points transfer 1:1 to 17+ partners. 0.99% forex. Points never expire. Utility/insurance/edu/govt combined capped Rs.1L/month. Exclusive to HSBC Premier banking customers.",
       "milestones": "Up to 12× points via HSBC Travel with Points portal. No traditional milestone structure.",
       "milestoneBonus": [],
@@ -363,7 +636,11 @@
     },
     {
       "id": "hdfc_marriott",
-      "names": ["HDFC Marriott Bonvoy", "HDFC Marriott", "HDFC Bank Marriott Bonvoy"],
+      "names": [
+        "HDFC Marriott Bonvoy",
+        "HDFC Marriott",
+        "HDFC Bank Marriott Bonvoy"
+      ],
       "baseRate": 0.013333,
       "forexMarkup": 0.035,
       "intlRate": 0.013333,
@@ -386,14 +663,31 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.013333
       },
-      "exclusions": ["Fuel", "Wallet Loads"],
-      "partners": ["Marriott Bonvoy"],
+      "exclusions": [
+        "Fuel",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Marriott Bonvoy"
+      ],
       "notes": "8 Marriott Bonvoy points per Rs.150 at Marriott properties. 4 pts/Rs.150 on flights, dining and entertainment. 2 pts/Rs.150 on all other eligible spends. Diners Club network. Airline mile transfers at 3:1 (3 Bonvoy pts = 1 airline mile) via Marriott program. 3.5% forex.",
       "milestones": "Rs.6L -> 1 Free Night Award (up to 15,000 pts); Rs.9L -> 2nd Free Night; Rs.15L -> 3rd and 4th Free Night Awards.",
       "milestoneBonus": [
-        {"threshold": 600000, "bonusValue": 8000, "label": "1 Free Night Award at Rs.6L spend"},
-        {"threshold": 900000, "bonusValue": 8000, "label": "2nd Free Night Award at Rs.9L spend"},
-        {"threshold": 1500000, "bonusValue": 16000, "label": "3rd + 4th Free Night Awards at Rs.15L spend"}
+        {
+          "threshold": 600000,
+          "bonusValue": 8000,
+          "label": "1 Free Night Award at Rs.6L spend"
+        },
+        {
+          "threshold": 900000,
+          "bonusValue": 8000,
+          "label": "2nd Free Night Award at Rs.9L spend"
+        },
+        {
+          "threshold": 1500000,
+          "bonusValue": 16000,
+          "label": "3rd + 4th Free Night Awards at Rs.15L spend"
+        }
       ],
       "annualFee": 3540,
       "feeNote": "Rs.3,000 + 18% GST",
@@ -401,7 +695,12 @@
     },
     {
       "id": "hdfc_tata_neu",
-      "names": ["HDFC Tata Neu Infinity", "HDFC Tata Neu", "Tata Neu Infinity", "Tata Neu Infinity HDFC"],
+      "names": [
+        "HDFC Tata Neu Infinity",
+        "HDFC Tata Neu",
+        "Tata Neu Infinity",
+        "Tata Neu Infinity HDFC"
+      ],
       "baseRate": 0.015,
       "forexMarkup": 0.035,
       "intlRate": 0.015,
@@ -424,8 +723,16 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.015
       },
-      "exclusions": ["Fuel", "Rent", "Government", "Wallet Loads"],
-      "partners": ["Air India (Maharaja Club)", "IHCL / Taj Hotels"],
+      "exclusions": [
+        "Fuel",
+        "Rent",
+        "Government",
+        "Wallet Loads"
+      ],
+      "partners": [
+        "Air India (Maharaja Club)",
+        "IHCL / Taj Hotels"
+      ],
       "notes": "1 NeuCoin = Rs.1 redeemable on Tata Neu app. 5% on Tata-brand spends (Air India, BigBasket, Croma, 1mg, Tata CLiQ, Taj Hotels) — requires NeuPass subscription. 1.5% on all other eligible spends. Grocery/utility/insurance NeuCoins each capped 2,000/month. NeuCoins expire 12 months from credit.",
       "milestones": "NeuPass subscription required for 5% on Tata brands. Lounge access milestone-based from Jun 2025.",
       "milestoneBonus": [],
@@ -435,7 +742,12 @@
     },
     {
       "id": "icici_mmt",
-      "names": ["ICICI MakeMyTrip", "ICICI MMT", "MakeMyTrip ICICI", "ICICI Bank MakeMyTrip"],
+      "names": [
+        "ICICI MakeMyTrip",
+        "ICICI MMT",
+        "MakeMyTrip ICICI",
+        "ICICI Bank MakeMyTrip"
+      ],
       "baseRate": 0.01,
       "forexMarkup": 0.0099,
       "intlRate": 0.01,
@@ -458,7 +770,11 @@
         "Wallet Loads": 0.0,
         "International Transactions": 0.01
       },
-      "exclusions": ["Fuel", "Rent", "Wallet Loads"],
+      "exclusions": [
+        "Fuel",
+        "Rent",
+        "Wallet Loads"
+      ],
       "partners": [],
       "notes": "1 myCash = Rs.1, redeemable ONLY on MakeMyTrip — NOT transferable to airline miles. 6% myCash on hotel bookings via MMT; 3% on flights, holidays, cabs and buses via MMT; 1% on all other eligible spends. 0.99% forex. MMTBLACK Gold status on card joining.",
       "milestones": "Rs.50,000 spend + 4 trips -> MMTBLACK Gold tier; Rs.2L spend + 4 trips -> MMTBLACK Platinum tier.",
