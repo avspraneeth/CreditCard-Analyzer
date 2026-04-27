@@ -88,7 +88,7 @@ var DC = [
      {name:'Radisson Rewards',type:'hotel'},
    ],
    notes:'APRIL 2026 UPDATE: Accor, Marriott Bonvoy, and Qatar Airways REMOVED. New partners BA/Finnair/Vietnam added but at poor 2:1 ratio (2 EDGE Miles = 1 mile). Standard partners (KrisFlyer, Aeroplan, JAL, Flying Blue, Air India) remain at 1:2. Group A cap 30K/yr, Group B cap 120K/yr. 5X travel capped Rs.2L/month.',
-   milestones:'Rs.3L->2.5K miles; Rs.7.5L->Gold tier; Rs.15L->Platinum tier'},
+   milestones:'Rs.3L->2.5K EDGE miles; Rs.7.5L->5K EDGE miles + Gold tier; Rs.15L->10K EDGE miles + Platinum tier'},
 
   {id:'indusind_avios',name:'IndusInd Avios Infinite',currency:'Avios',baseRate:3/200,forexMarkup:0.035,intlRate:0.015,intlTravelRate:0.015,
    categories:{'Flights':5/200,'Hotels':3/200,'Dining':3/200,'Shopping':3/200,'Groceries':3/200,'Entertainment':3/200,'Healthcare':3/200,'Education':1/200,'Utilities':1/200,'Insurance':1/200,'Fuel':0,'Rent':3/200,'Government':1/200,'Jewellery':3/200,'Wallet Loads':3/200,'International Transactions':0.015},
@@ -116,7 +116,7 @@ var DC = [
    exclusions:['Rent','Wallet Loads'],dex:['Rent','Wallet Loads'],
    partners:[{name:'Air India (Maharaja Club)',type:'airline'}],
    notes:'2.5 pts/Rs.100 on international spends. 12X on iShop hotels, 6X on iShop flights/vouchers. 1.49% forex. 5K pts/month cap on utilities/insurance/edu/govt combined. Fuel earns pts but no redemption.',
-   milestones:'Rs.2L->Rs.10K Klook; Rs.5L->mobility wallet; Rs.10L, Rs.20L, Rs.25L milestones'},
+   milestones:'Rs.2L->Rs.10K Klook; Rs.5L->Rs.10K airport transfers; Rs.10L->Rs.10K Tata CLiQ Luxury; Rs.20L->Rs.20K Ayatana/Lohono stay; Rs.25L->fee waiver'},
 
   {id:'hdfc_tata_neu',name:'HDFC Tata Neu Infinity',currency:'NeuCoins',baseRate:1.5/100,forexMarkup:0.035,intlRate:0.015,intlTravelRate:0.015,
    categories:{'Flights':5/100,'Hotels':5/100,'Dining':5/100,'Shopping':5/100,'Groceries':5/100,'Entertainment':1.5/100,'Healthcare':5/100,'Education':1.5/100,'Utilities':1.5/100,'Insurance':1.5/100,'Fuel':0,'Rent':0,'Government':0,'Jewellery':1.5/100,'Wallet Loads':0,'International Transactions':0.015},
@@ -242,10 +242,16 @@ var MILESTONES = {
   ],
   'hsbc_travelone':    [{threshold:1200000, bonusPts:10000, bonusCash:0, label:'₹12L → 10K pts'}],
   'icici_times_black': [
-    {threshold:200000, bonusPts:0, bonusCash:10000, label:'₹2L → ₹10K Klook'},
-    {threshold:500000, bonusPts:0, bonusCash:5000,  label:'₹5L → ₹5K mobility'}
+    {threshold:200000,  bonusPts:0, bonusCash:10000, label:'₹2L → ₹10K Klook'},
+    {threshold:500000,  bonusPts:0, bonusCash:10000, label:'₹5L → ₹10K airport transfers'},
+    {threshold:1000000, bonusPts:0, bonusCash:10000, label:'₹10L → ₹10K Tata CLiQ Luxury'},
+    {threshold:2000000, bonusPts:0, bonusCash:20000, label:'₹20L → ₹20K Ayatana/Lohono stay'}
   ],
-  'axis_atlas':        [{threshold:300000, bonusPts:2500, bonusCash:0, label:'₹3L → 2.5K EDGE Miles'}]
+  'axis_atlas': [
+    {threshold:300000,  bonusPts:2500,  bonusCash:0, label:'₹3L → 2.5K EDGE Miles'},
+    {threshold:750000,  bonusPts:5000,  bonusCash:0, label:'₹7.5L → 5K EDGE Miles + Gold tier'},
+    {threshold:1500000, bonusPts:10000, bonusCash:0, label:'₹15L → 10K EDGE Miles + Platinum tier'}
+  ]
 };
 
 function milestoneBonusVal(card, spend) {
