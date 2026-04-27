@@ -542,6 +542,63 @@ function evalCardMap(cardMap, spends, scenNote) {
   return{alloc:_alloc,cardTotals:_ct,partnerTotals:_pt,totalVal:_tv,milestoneRows:_mRows,milestoneVal:_mVal,note:scenNote||null};
 }
 
+// Evaluates a scenario like evalCardMap but splits one category between two cards.
+// baseCardMap covers all categories; splitCat/card1/spend1/card2/spend2 override that category.
+function evalSplitScenario(baseCardMap, splitCat, card1, spend1, card2, spend2, spends) {
+  var _alloc={},_ct={},_pt={},_cs={},_tv=0;
+  cards.forEach(function(c){_ct[c.id]=0;_cs[c.id]=0;});
+  cats.forEach(function(cat){
+    var spend=spends[cat]||0;
+    if(cat===splitCat){
+      if(!spend){_alloc[cat]={card:null,pts:0,value:0,spend:0,partner:null};return;}
+      var pts1=earnPts(card1,cat,spend1),v1=calcV(card1,cat,spend1);
+      var pts2=earnPts(card2,cat,spend2),v2=calcV(card2,cat,spend2);
+      var bp1=bestPartner(card1).name,bp2=bestPartner(card2).name;
+      _alloc[cat]={card:card1,pts:pts1+pts2,value:v1+v2,spend:spend,partner:bp1,
+        isSplit:true,card2:card2,spend1:spend1,spend2:spend2,
+        pts1:pts1,pts2:pts2,val1:v1,val2:v2,partner1:bp1,partner2:bp2};
+      _ct[card1.id]+=v1;_ct[card2.id]+=v2;
+      _cs[card1.id]+=spend1;_cs[card2.id]+=spend2;
+      if(bp1)_pt[bp1]=(_pt[bp1]||0)+v1;
+      if(bp2)_pt[bp2]=(_pt[bp2]||0)+v2;
+      _tv+=v1+v2;
+    } else {
+      var card=baseCardMap[cat]||null;
+      if(!spend||!card){_alloc[cat]={card:null,pts:0,value:0,spend:spend,partner:null};return;}
+      var pts=earnPts(card,cat,spend),v=calcV(card,cat,spend);
+      if(cat==='International Transactions')v=Math.max(0,v-forexCost(card,spend));
+      var bp=bestPartner(card).name;
+      _alloc[cat]={card:card,pts:pts,value:v,spend:spend,partner:bp};
+      _ct[card.id]+=v;_cs[card.id]+=spend;
+      if(bp)_pt[bp]=(_pt[bp]||0)+v;
+      _tv+=v;
+    }
+  });
+  var _mRows=[],_mVal=0;
+  cards.forEach(function(card){
+    var mb=getEffectiveMilestones(card);if(!mb.length)return;
+    var cSpend=_cs[card.id]||0,bp=bestPartner(card);
+    mb.forEach(function(m){
+      var mVal=(m.bonusValue||0)+(m.bonusPts||0)*bp.val;
+      var met=cSpend>=m.threshold;
+      _mRows.push({card:card,label:m.label,value:mVal,met:met,threshold:m.threshold,shortfall:met?0:m.threshold-cSpend});
+      if(met){_mVal+=mVal;_ct[card.id]=(_ct[card.id]||0)+mVal;}
+    });
+  });
+  _tv+=_mVal;
+  // Annotate the split alloc entry with which milestones were unlocked per card
+  if(_alloc[splitCat]&&_alloc[splitCat].isSplit){
+    var _ms1=[],_ms2=[];
+    _mRows.forEach(function(r){if(!r.met)return;if(r.card.id===card1.id)_ms1.push(r.label);if(r.card.id===card2.id)_ms2.push(r.label);});
+    _alloc[splitCat].ms1=_ms1.join('; ');
+    _alloc[splitCat].ms2=_ms2.join('; ');
+  }
+  var spd1=spend1>=100000?'₹'+(spend1/100000).toFixed(1)+'L':'₹'+Math.round(spend1/1000)+'K';
+  var spd2=spend2>=100000?'₹'+(spend2/100000).toFixed(1)+'L':'₹'+Math.round(spend2/1000)+'K';
+  var note=splitCat+': '+spd1+' on '+card1.name.split(' ').slice(-2).join(' ')+' / '+spd2+' on '+card2.name.split(' ').slice(-2).join(' ');
+  return{alloc:_alloc,cardTotals:_ct,partnerTotals:_pt,totalVal:_tv,milestoneRows:_mRows,milestoneVal:_mVal,note:note};
+}
+
 // ── Main optimizer ────────────────────────────────────────────────────────────
 function runOptimizer() {
   var spends={}, totalSpend=0;
@@ -595,6 +652,40 @@ function runOptimizer() {
     }
   });
 
+  // ── Scenario D: within-category splits ──────────────────────────────────────
+  // For each category, try splitting spend between two cards where at least one
+  // has milestones.  Uses greedyMap as the base for all other categories so the
+  // card-spend totals — and therefore milestone eligibility — are re-evaluated
+  // correctly for every candidate split point.
+  cats.forEach(function(cat){
+    var catSpend=spends[cat]||0; if(!catSpend) return;
+    for(var pi=0;pi<cards.length;pi++){
+      for(var pj=pi+1;pj<cards.length;pj++){
+        var c1=cards[pi],c2=cards[pj];
+        var ms1=getEffectiveMilestones(c1),ms2=getEffectiveMilestones(c2);
+        if(!ms1.length&&!ms2.length) continue;
+        // Card spend from greedyMap on all OTHER categories
+        var gcs1=0,gcs2=0;
+        cats.forEach(function(c){
+          if(c===cat)return;
+          var gc=greedyMap[c];if(!gc)return;
+          if(gc.id===c1.id)gcs1+=spends[c]||0;
+          if(gc.id===c2.id)gcs2+=spends[c]||0;
+        });
+        // Candidate amounts for c1: 10% steps + milestone-threshold amounts for both cards
+        var seen={},cands=[],ca;
+        for(var s=1;s<=9;s++){ca=Math.round(catSpend*s/10);if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        ms1.forEach(function(m){ca=m.threshold-gcs1;if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}});
+        ms2.forEach(function(m){ca=catSpend-(m.threshold-gcs2);if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}});
+        for(var k=0;k<cands.length;k++){
+          var a1=cands[k],a2=catSpend-a1;
+          var rD=evalSplitScenario(greedyMap,cat,c1,a1,c2,a2,spends);
+          if(rD.totalVal>bestScen.totalVal)bestScen=rD;
+        }
+      }
+    }
+  });
+
   var alloc=bestScen.alloc;
   var cardTotals=bestScen.cardTotals;
   var partnerTotals=bestScen.partnerTotals;
@@ -639,7 +730,10 @@ function runOptimizer() {
   // ── Annual fees & renewal benefits ───────────────────────────────────────────
   var usedCards=[];
   cards.forEach(function(card){
-    var used=cats.some(function(cat){var a=alloc[cat];return a&&a.card&&a.card.id===card.id;});
+    var used=cats.some(function(cat){
+      var a=alloc[cat];
+      return a&&((a.card&&a.card.id===card.id)||(a.card2&&a.card2.id===card.id));
+    });
     if(used)usedCards.push(card);
   });
   var totalFees=0,totalRenewVal=0,feeRows=[];
@@ -701,7 +795,11 @@ function runOptimizer() {
   setOut('o-rate',totalSpend>0?(totalVal/totalSpend*100).toFixed(2)+'%':'—',totalVal===0);
   setOut('o-bcard',bCard?bCard.name.split(' ').slice(-2).join(' '):'—',!bCard);
   var bCardSpend=0;
-  if(bCard){cats.forEach(function(cat){if(alloc[cat]&&alloc[cat].card&&alloc[cat].card.id===bCard.id)bCardSpend+=alloc[cat].spend||0;});}
+  if(bCard){cats.forEach(function(cat){
+    var a=alloc[cat];if(!a)return;
+    if(a.isSplit){if(a.card&&a.card.id===bCard.id)bCardSpend+=a.spend1||0;if(a.card2&&a.card2.id===bCard.id)bCardSpend+=a.spend2||0;}
+    else if(a.card&&a.card.id===bCard.id)bCardSpend+=a.spend||0;
+  });}
   var bCardVal=bEntry?bEntry[1]:0;
   setOut('o-brate',bCard&&bCardSpend>0?(bCardVal/bCardSpend*100).toFixed(2)+'%':'—',!bCard);
   setOut('o-topcat',topCE?topCE[0]+' ('+fmt(topCE[1].value)+')':'—',!topCE);
@@ -720,19 +818,33 @@ function runOptimizer() {
   var tPts=0,tVal=0,tSpend=0;
   sc.forEach(function(cat){
     var a=alloc[cat],row=document.createElement('div');
-    row.style.cssText='display:grid;grid-template-columns:'+COL6+';gap:.3rem;padding:.42rem 0;border-bottom:1px solid rgba(42,42,58,.3);font-size:.79rem;align-items:center';
-    // Show milestone badge when card earns 0 pts but is recommended for milestone value
-    var isMilestonePick = a.card && a.pts===0 && cardMilestoneVal[a.card.id]>0;
-    var valueCell = isMilestonePick
-      ? '<span class="fm" style="color:var(--accent3)">milestone ★</span>'
-      : '<span class="fm" style="color:var(--success)">'+fmt(a.value)+'</span>';
-    row.innerHTML=
-      '<span style="font-weight:500">'+cat+'</span>'+
-      '<span style="font-size:.74rem;color:'+(a.card?'var(--text)':'var(--muted)')+'">'+( a.card?a.card.name:'No rewards')+'</span>'+
-      '<span class="fm" style="color:var(--muted);font-size:.74rem">'+fmt(a.spend)+'</span>'+
-      '<span class="fm" style="color:var(--accent);font-size:.74rem">'+fmtPts(a.pts)+'</span>'+
-      '<span style="font-size:.7rem;color:var(--accent3)">'+(a.partner||'—')+'</span>'+
-      valueCell;
+    if(a.isSplit){
+      row.style.cssText='display:grid;grid-template-columns:'+COL6+';gap:.3rem;padding:.42rem 0 .38rem;border-bottom:1px solid rgba(42,42,58,.3);font-size:.79rem;align-items:start';
+      var ms1h=a.ms1?'<div style="font-size:.66rem;color:var(--accent);margin-top:.1rem">'+a.ms1+'</div>':'';
+      var ms2h=a.ms2?'<div style="font-size:.66rem;color:var(--accent);margin-top:.04rem">'+a.ms2+'</div>':'';
+      row.innerHTML=
+        '<span style="font-weight:500">'+cat+'<span class="split-tag">split</span></span>'+
+        '<span style="font-size:.73rem"><div><span style="color:var(--text)">'+a.card.name+'</span> <span style="color:var(--muted);font-size:.69rem">'+fmt(a.spend1)+'</span>'+ms1h+'</div>'+
+        '<div style="margin-top:.2rem"><span style="color:var(--text)">'+a.card2.name+'</span> <span style="color:var(--muted);font-size:.69rem">'+fmt(a.spend2)+'</span>'+ms2h+'</div></span>'+
+        '<span class="fm" style="color:var(--muted);font-size:.74rem">'+fmt(a.spend)+'</span>'+
+        '<span class="fm" style="color:var(--accent);font-size:.73rem">'+fmtPts(a.pts1)+'<div style="margin-top:.2rem">'+fmtPts(a.pts2)+'</div></span>'+
+        '<span style="font-size:.69rem;color:var(--accent3)">'+(a.partner1||'—')+'<div style="margin-top:.2rem">'+(a.partner2||'—')+'</div></span>'+
+        '<span class="fm" style="color:var(--success)">'+fmt(a.val1)+'<div style="margin-top:.2rem">'+fmt(a.val2)+'</div></span>';
+    } else {
+      row.style.cssText='display:grid;grid-template-columns:'+COL6+';gap:.3rem;padding:.42rem 0;border-bottom:1px solid rgba(42,42,58,.3);font-size:.79rem;align-items:center';
+      // Show milestone badge when card earns 0 pts but is recommended for milestone value
+      var isMilestonePick=a.card&&a.pts===0&&cardMilestoneVal[a.card.id]>0;
+      var valueCell=isMilestonePick
+        ?'<span class="fm" style="color:var(--accent3)">milestone ★</span>'
+        :'<span class="fm" style="color:var(--success)">'+fmt(a.value)+'</span>';
+      row.innerHTML=
+        '<span style="font-weight:500">'+cat+'</span>'+
+        '<span style="font-size:.74rem;color:'+(a.card?'var(--text)':'var(--muted)')+'">'+( a.card?a.card.name:'No rewards')+'</span>'+
+        '<span class="fm" style="color:var(--muted);font-size:.74rem">'+fmt(a.spend)+'</span>'+
+        '<span class="fm" style="color:var(--accent);font-size:.74rem">'+fmtPts(a.pts)+'</span>'+
+        '<span style="font-size:.7rem;color:var(--accent3)">'+(a.partner||'—')+'</span>'+
+        valueCell;
+    }
     tbl.appendChild(row);
     tPts+=a.pts||0;tVal+=a.value||0;tSpend+=a.spend||0;
   });
