@@ -1203,6 +1203,7 @@ function submitAddCard() {
 
 // ── Card T&C helpers ──────────────────────────────────────────────────────────
 function applyCardData(card, data) {
+  if (data.id && typeof data.id === 'string') card.id = data.id;
   if (typeof data.baseRate === 'number') card.baseRate = data.baseRate;
   if (typeof data.forexMarkup === 'number') card.forexMarkup = data.forexMarkup;
   if (typeof data.intlRate === 'number') card.intlRate = data.intlRate;
