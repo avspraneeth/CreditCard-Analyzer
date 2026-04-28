@@ -326,9 +326,8 @@ var _LEGACY_DC = [
      {name:'Etihad Guest',type:'airline'},{name:'Qatar Privilege Club',type:'airline'},
      {name:'Singapore Airlines (KrisFlyer)',type:'airline'},{name:'Virgin Atlantic Flying Club',type:'airline'},
      {name:'Asia Miles (Cathay)',type:'airline'},
-     {name:'Accor Live Limitless',type:'hotel'},
    ],
-   notes:'1 MR per Rs.50 on all eligible spends (2% earn). Airline transfers at 2:1 (2 MR = 1 mile) — half the value of Amex Platinum Travel which transfers at 1:1. Exclusions: fuel, insurance, utilities. Complimentary Taj Epicure + Accor+ Explorer memberships. Rs.10,000 fee waived at Rs.10L spend.',
+   notes:'1 MR per Rs.50 on all eligible spends (2% earn). Airline transfers at 2:1 (2 MR = 1 mile) — half the value of Amex Platinum Travel which transfers at 1:1. Exclusions: fuel, insurance, utilities. Complimentary Taj Epicure + Accor+ Explorer memberships (card benefit, not MR transfer). Rs.10,000 fee waived at Rs.10L spend.',
    milestones:'Accor+ Explorer membership (30% dining discount). Priority Pass for intl lounges.'},
 
 ]; // end _LEGACY_DC
