@@ -401,11 +401,12 @@
         "Turkish Airlines (Miles&Smiles)",
         "Ethiopian ShebaMiles",
         "SpiceJet SpiceClub",
+        "ITC Hotels",
         "IHG One Rewards",
         "Orchid Rewards",
         "Radisson Rewards"
       ],
-      "notes": "APRIL 2026: All airline transfers at 2:1 (2 EDGE Miles = 1 mile), incl. KrisFlyer, Aeroplan, JAL, Air India, Flying Blue. Hotel transfers (ITC, IHG, Orchid, Radisson) at 1:1. Group A cap 30K/yr, Group B cap 120K/yr.",
+      "notes": "APRIL 2026 UPDATE: Accor, Marriott Bonvoy, and Qatar Airways REMOVED. Legacy partners (KrisFlyer, Aeroplan, JAL, Air India, Flying Blue etc.) at 1:2 (1 EDGE Mile = 2 miles). New Apr 2026 partners (BA, Finnair, Vietnam) at 2:1. Group A cap 30K/yr, Group B cap 120K/yr. 5X travel capped Rs.2L/month.",
       "milestones": "Rs.3L->2.5K EDGE miles; Rs.7.5L->5K EDGE miles + Gold tier; Rs.15L->10K EDGE miles + Platinum tier",
       "milestoneBonus": [
         {
