@@ -121,7 +121,12 @@ var BUILTIN_CARD_INFO = [
      {threshold:750000,bonusPts:5000,label:"5,000 bonus EDGE miles + Gold tier at Rs.7.5L spend"},
      {threshold:1500000,bonusPts:10000,label:"10,000 bonus EDGE miles + Platinum tier at Rs.15L spend"}
    ],
-   annualFee:5900,feeNote:"Rs.5,000 + 18% GST; waived at Rs.7.5L spend",renewalBenefits:[]},
+   annualFee:5900,feeNote:"Rs.5,000 + 18% GST; waived at Rs.7.5L spend",
+   renewalBenefits:[
+     {bonusPts:5000,partner:'Singapore Airlines (KrisFlyer)',label:'5,000 EDGE miles on renewal (Silver tier)',minSpend:0},
+     {bonusPts:7500,partner:'Singapore Airlines (KrisFlyer)',label:'7,500 EDGE miles on renewal (Gold tier)',minSpend:750000},
+     {bonusPts:10000,partner:'Singapore Airlines (KrisFlyer)',label:'10,000 EDGE miles on renewal (Platinum tier)',minSpend:1500000}
+   ]},
   {names:["Axis Vistara Infinite","Axis Vistara","Axis Bank Vistara Infinite","Axis Bank Vistara"],
    milestoneBonus:[
      {threshold:100000,bonusPts:10000,label:"10,000 bonus CV Points at Rs.1L spend"},
@@ -743,6 +748,17 @@ function runOptimizer() {
   }
 
   // ── Annual fees & renewal benefits ───────────────────────────────────────────
+  // Compute per-card spend from the optimizer's alloc (needed for tier-based renewal benefits)
+  var allocCardSpend={};
+  cats.forEach(function(cat){
+    var a=alloc[cat];if(!a)return;
+    if(a.isSplit){
+      if(a.card)allocCardSpend[a.card.id]=(allocCardSpend[a.card.id]||0)+(a.spend1||0);
+      if(a.card2)allocCardSpend[a.card2.id]=(allocCardSpend[a.card2.id]||0)+(a.spend2||0);
+    } else if(a.card){
+      allocCardSpend[a.card.id]=(allocCardSpend[a.card.id]||0)+(a.spend||0);
+    }
+  });
   var usedCards=[];
   cards.forEach(function(card){
     var used=cats.some(function(cat){
@@ -754,9 +770,11 @@ function runOptimizer() {
   var totalFees=0,totalRenewVal=0,feeRows=[];
   usedCards.forEach(function(card){
     var fee=card.annualFee||0;
-    var rv=calcRenewalVal(card);
+    var cs=allocCardSpend[card.id]||0;
+    var rv=calcRenewalVal(card,cs);
+    var rl=calcRenewalLabel(card,cs);
     totalFees+=fee;totalRenewVal+=rv;
-    feeRows.push({card:card,fee:fee,renewVal:rv,hasData:card.annualFee!==undefined});
+    feeRows.push({card:card,fee:fee,renewVal:rv,renewLabel:rl,hasData:card.annualFee!==undefined});
   });
   var netValue=totalVal-totalFees+totalRenewVal;
   var someUnknown=usedCards.some(function(c){return c.annualFee===undefined;});
@@ -777,7 +795,9 @@ function runOptimizer() {
         fHtml+='<div style="display:grid;grid-template-columns:'+FC+';gap:.3rem .7rem;font-size:.78rem;padding:.35rem 0;border-bottom:1px solid rgba(42,42,58,.3);align-items:center">'+
           '<span style="font-size:.74rem">'+r.card.name.split(' ').slice(-2).join(' ')+'</span>'+
           '<span class="fm" style="color:'+(r.fee>0?'var(--danger)':'var(--muted)')+'">'+fStr+'</span>'+
-          '<span class="fm" style="color:'+(r.renewVal>0?'var(--success)':'var(--muted)')+'">'+rvStr+'</span>'+
+          '<span style="color:'+(r.renewVal>0?'var(--success)':'var(--muted)')+';font-size:.78rem">'+
+            (r.renewVal>0?'+'+fmt(r.renewVal):'—')+
+            (r.renewLabel?'<div style="font-size:.65rem;color:var(--muted);margin-top:.1rem">'+r.renewLabel+'</div>':'')+'</span>'+
           '<span class="fm" style="color:'+(net>=0?'var(--success)':'var(--danger)')+'">'+netStr+'</span>'+
           '</div>';
       });
@@ -1239,10 +1259,25 @@ function applyCardData(card, data) {
   if (Array.isArray(data.renewalBenefits)) card.renewalBenefits = JSON.parse(JSON.stringify(data.renewalBenefits));
 }
 
-function calcRenewalVal(card) {
+function calcRenewalVal(card, cardSpend) {
   if (!card.renewalBenefits || !card.renewalBenefits.length) return 0;
-  var total = 0;
+  cardSpend = cardSpend || 0;
+  // Split into unconditional benefits and tiered benefits (those with minSpend defined)
+  var unconditional = [], tiered = [];
   card.renewalBenefits.forEach(function(rb) {
+    if (typeof rb.minSpend === 'number') tiered.push(rb);
+    else unconditional.push(rb);
+  });
+  // For tiered benefits: apply only the highest tier whose minSpend is met
+  var bestTier = null;
+  tiered.forEach(function(rb) {
+    if (cardSpend >= rb.minSpend && (!bestTier || rb.minSpend > bestTier.minSpend))
+      bestTier = rb;
+  });
+  var toCount = unconditional.slice();
+  if (bestTier) toCount.push(bestTier);
+  var total = 0;
+  toCount.forEach(function(rb) {
     total += (rb.bonusValue || 0);
     if (rb.bonusPts && rb.partner) {
       var cn = canonical(rb.partner);
@@ -1250,6 +1285,17 @@ function calcRenewalVal(card) {
     }
   });
   return total;
+}
+
+function calcRenewalLabel(card, cardSpend) {
+  if (!card.renewalBenefits || !card.renewalBenefits.length) return '';
+  cardSpend = cardSpend || 0;
+  var bestTier = null;
+  card.renewalBenefits.forEach(function(rb) {
+    if (typeof rb.minSpend === 'number' && cardSpend >= rb.minSpend &&
+        (!bestTier || rb.minSpend > bestTier.minSpend)) bestTier = rb;
+  });
+  return bestTier ? bestTier.label : '';
 }
 
 function findBuiltin(cardName, builtins) {
