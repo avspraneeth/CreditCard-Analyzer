@@ -627,7 +627,7 @@ function runOptimizer() {
   var bestScen=evalCardMap(greedyMap,spends,null);
 
   // ── Scenarios B/C: concentrate spend on each milestone card ───────────────
-  // B = all-in on that card; C = shift cheapest categories to hit first unmet milestone
+  // B = all-in on that card; C = shift cheapest categories to hit each unmet milestone
   cards.forEach(function(fc){
     var fcMB=getEffectiveMilestones(fc);
     if(!fcMB.length)return;
@@ -636,61 +636,69 @@ function runOptimizer() {
     cats.forEach(function(cat){sMap[cat]=spends[cat]>0?fc:null;});
     var rB=evalCardMap(sMap,spends,'All spend on '+fc.name+' to unlock milestones');
     if(rB.totalVal>bestScen.totalVal)bestScen=rB;
-    // C: greedy + cheapest category shifts to reach first unmet milestone
+    // C: greedy + cheapest category shifts to reach each unmet milestone
     var fcGreedySpend=0;
     cats.forEach(function(cat){if(greedyMap[cat]===fc)fcGreedySpend+=(spends[cat]||0);});
-    var firstUnmet=null;
-    fcMB.forEach(function(m){if(!firstUnmet&&fcGreedySpend<m.threshold)firstUnmet=m;});
-    if(firstUnmet){
-      var gap=firstUnmet.threshold-fcGreedySpend;
-      var shiftable=[];
-      cats.forEach(function(cat){
-        var spend=spends[cat]||0;if(!spend)return;
-        var curCard=greedyMap[cat];if(curCard===fc)return;
-        var curV=curCard?calcV(curCard,cat,spend):0;
-        shiftable.push({cat:cat,spend:spend,costPerRupee:(curV-calcV(fc,cat,spend))/spend});
-      });
-      shiftable.sort(function(a,b){return a.costPerRupee-b.costPerRupee;});
+    // Build shiftable list once (sorted by cost per rupee ascending)
+    var shiftable=[];
+    cats.forEach(function(cat){
+      var spend=spends[cat]||0;if(!spend)return;
+      var curCard=greedyMap[cat];if(curCard===fc)return;
+      var curV=curCard?calcV(curCard,cat,spend):0;
+      shiftable.push({cat:cat,spend:spend,costPerRupee:(curV-calcV(fc,cat,spend))/spend});
+    });
+    shiftable.sort(function(a,b){return a.costPerRupee-b.costPerRupee;});
+    // Try shifting to reach EACH unmet milestone (not just firstUnmet)
+    fcMB.forEach(function(m){
+      if(fcGreedySpend>=m.threshold)return; // already met in greedy
+      var gap=m.threshold-fcGreedySpend;
       var cMap=Object.assign({},greedyMap);
       var shifted=0;
       for(var i=0;i<shiftable.length&&shifted<gap;i++){cMap[shiftable[i].cat]=fc;shifted+=shiftable[i].spend;}
-      var rC=evalCardMap(cMap,spends,'Spend shifted to '+fc.name+' to unlock '+firstUnmet.label);
+      var rC=evalCardMap(cMap,spends,'Spend shifted to '+fc.name+' to unlock '+m.label);
       if(rC.totalVal>bestScen.totalVal)bestScen=rC;
-    }
+    });
   });
 
   // ── Scenario D: within-category splits ──────────────────────────────────────
-  // For each category, try splitting spend between two cards where at least one
-  // has milestones.  Uses greedyMap as the base for all other categories so the
-  // card-spend totals — and therefore milestone eligibility — are re-evaluated
-  // correctly for every candidate split point.
-  cats.forEach(function(cat){
-    var catSpend=spends[cat]||0; if(!catSpend) return;
-    for(var pi=0;pi<cards.length;pi++){
-      for(var pj=pi+1;pj<cards.length;pj++){
-        var c1=cards[pi],c2=cards[pj];
-        var ms1=getEffectiveMilestones(c1),ms2=getEffectiveMilestones(c2);
-        if(!ms1.length&&!ms2.length) continue;
-        // Card spend from greedyMap on all OTHER categories
-        var gcs1=0,gcs2=0;
-        cats.forEach(function(c){
-          if(c===cat)return;
-          var gc=greedyMap[c];if(!gc)return;
-          if(gc.id===c1.id)gcs1+=spends[c]||0;
-          if(gc.id===c2.id)gcs2+=spends[c]||0;
-        });
-        // Candidate amounts for c1: 10% steps + milestone-threshold amounts for both cards
-        var seen={},cands=[],ca;
-        for(var s=1;s<=9;s++){ca=Math.round(catSpend*s/10);if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
-        ms1.forEach(function(m){ca=m.threshold-gcs1;if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}});
-        ms2.forEach(function(m){ca=catSpend-(m.threshold-gcs2);if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}});
-        for(var k=0;k<cands.length;k++){
-          var a1=cands[k],a2=catSpend-a1;
-          var rD=evalSplitScenario(greedyMap,cat,c1,a1,c2,a2,spends);
-          if(rD.totalVal>bestScen.totalVal)bestScen=rD;
+  // Run with greedyMap as base AND with the post-B/C best allocation as base.
+  // Using two bases ensures we find splits that improve over Scenario C results
+  // even when C shifted categories away from the milestone card.
+  var bestAfterBCMap = {};
+  cats.forEach(function(cat) {
+    var a = bestScen.alloc ? bestScen.alloc[cat] : null;
+    bestAfterBCMap[cat] = (a && a.card && !a.isSplit) ? a.card : (greedyMap[cat] || null);
+  });
+
+  [greedyMap, bestAfterBCMap].forEach(function(baseMap) {
+    cats.forEach(function(cat){
+      var catSpend=spends[cat]||0; if(!catSpend) return;
+      for(var pi=0;pi<cards.length;pi++){
+        for(var pj=pi+1;pj<cards.length;pj++){
+          var c1=cards[pi],c2=cards[pj];
+          var ms1=getEffectiveMilestones(c1),ms2=getEffectiveMilestones(c2);
+          if(!ms1.length&&!ms2.length) continue;
+          // Card spend from baseMap on all OTHER categories
+          var gcs1=0,gcs2=0;
+          cats.forEach(function(c){
+            if(c===cat)return;
+            var gc=baseMap[c];if(!gc)return;
+            if(gc.id===c1.id)gcs1+=spends[c]||0;
+            if(gc.id===c2.id)gcs2+=spends[c]||0;
+          });
+          // Candidate amounts for c1: 10% steps + milestone-threshold amounts for both cards
+          var seen={},cands=[],ca;
+          for(var s=1;s<=9;s++){ca=Math.round(catSpend*s/10);if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+          ms1.forEach(function(m){ca=m.threshold-gcs1;if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}});
+          ms2.forEach(function(m){ca=catSpend-(m.threshold-gcs2);if(ca>0&&ca<catSpend&&!seen[ca]){seen[ca]=1;cands.push(ca);}});
+          for(var k=0;k<cands.length;k++){
+            var a1=cands[k],a2=catSpend-a1;
+            var rD=evalSplitScenario(baseMap,cat,c1,a1,c2,a2,spends);
+            if(rD.totalVal>bestScen.totalVal)bestScen=rD;
+          }
         }
       }
-    }
+    });
   });
 
   var alloc=bestScen.alloc;
