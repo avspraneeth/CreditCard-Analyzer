@@ -817,8 +817,9 @@ function runOptimizer() {
     }
   }
 
-  // Cache for Feature 2
+  // Cache for Feature 2 / Feature 4
   lastAlloc=alloc;lastCardTotals=cardTotals;lastPartnerTotals=partnerTotals;lastTotalSpend=totalSpend;
+  if (typeof initF4CardSelect === 'function') initF4CardSelect();
 
   var bEntry=Object.entries(cardTotals).sort(function(a,b){return b[1]-a[1];})[0];
   var bCard=bEntry?cards.find(function(c){return c.id===bEntry[0];}):null;
@@ -1543,9 +1544,39 @@ function calcOptimizerTotal(cardList) {
   }
 }
 
+function getSelectedCardIds() {
+  var ids = {};
+  if (!lastAlloc) return ids;
+  cats.forEach(function(cat) {
+    var a = lastAlloc[cat]; if (!a) return;
+    if (a.card) ids[a.card.id] = true;
+    if (a.isSplit && a.card2) ids[a.card2.id] = true;
+  });
+  return ids;
+}
+
 function initF4CardSelect() {
   var sel = document.getElementById('f4-card-select'); if (!sel) return;
-  sel.innerHTML = cards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  var selectedIds = getSelectedCardIds();
+  var hasGroups = Object.keys(selectedIds).length > 0;
+  if (!hasGroups) {
+    sel.innerHTML = '<optgroup label="New Cards">' +
+      cards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
+      '</optgroup>';
+  } else {
+    var renewals = cards.filter(function(c){ return selectedIds[c.id]; });
+    var newCards = cards.filter(function(c){ return !selectedIds[c.id]; });
+    var html = '';
+    if (renewals.length)
+      html += '<optgroup label="Renewals">' +
+        renewals.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
+        '</optgroup>';
+    if (newCards.length)
+      html += '<optgroup label="New Cards">' +
+        newCards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
+        '</optgroup>';
+    sel.innerHTML = html;
+  }
   populateF4Fees();
 }
 
@@ -1558,7 +1589,6 @@ function populateF4Fees() {
   sv('f4-welcome-cash', 0);
   sv('f4-renewal-fee', card.annualFee || 0);
   sv('f4-renewal-pts', 0);
-  // Compute renewal benefit value from card's renewalBenefits (direct partner miles → ₹)
   var renewalCash = 0;
   (card.renewalBenefits || []).forEach(function(rb){
     renewalCash += (rb.bonusPts || 0) * (pv[canonical(rb.partner)] || 0);
@@ -1579,8 +1609,13 @@ function runCardEval() {
   var renewalPts  = parseFloat(document.getElementById('f4-renewal-pts').value)   || 0;
   var renewalCash = parseFloat(document.getElementById('f4-renewal-cash').value)  || 0;
 
-  var totalWith    = calcOptimizerTotal(cards);
-  var totalWithout = calcOptimizerTotal(cards.filter(function(c){ return c.id !== cardId; }));
+  var selectedIds  = getSelectedCardIds();
+  var isRenewal    = !!selectedIds[cardId];
+  var selectedCards = cards.filter(function(c){ return selectedIds[c.id]; });
+  var withList     = isRenewal ? selectedCards : selectedCards.concat([card]);
+  var withoutList  = isRenewal ? selectedCards.filter(function(c){ return c.id !== cardId; }) : selectedCards;
+  var totalWith    = calcOptimizerTotal(withList);
+  var totalWithout = calcOptimizerTotal(withoutList);
   var incrReward   = totalWith - totalWithout;
 
   var bp = bestPartner(card);
