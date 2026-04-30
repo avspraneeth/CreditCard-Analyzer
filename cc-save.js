@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initSpendInputs();
   populateTravelSelects();
   restoreState();
+  if (typeof initF4CardSelect === 'function') initF4CardSelect();
   if (typeof patchCardsFromBuiltins === 'function') {
     patchCardsFromBuiltins();
     autoSave();

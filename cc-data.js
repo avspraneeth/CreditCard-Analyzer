@@ -1202,6 +1202,7 @@ function removeCard(cardId) {
   var idx=cards.findIndex(function(c){return c.id===cardId;});if(idx<0)return;
   cards.splice(idx,1);
   var sel=document.getElementById('data-card-select');if(sel){var o=sel.querySelector('option[value="'+cardId+'"]');if(o)o.remove();}
+  var f4sel=document.getElementById('f4-card-select');if(f4sel){var f4o=f4sel.querySelector('option[value="'+cardId+'"]');if(f4o)f4o.remove();}
   renderInputsTab();populateTravelSelects();autoSave();
 }
 function openAddCardModal() {
@@ -1223,6 +1224,7 @@ function submitAddCard() {
   var nc={id:id,name:name,currency:currency,baseRate:0.02,forexMarkup:0.035,intlRate:0.02,intlTravelRate:0.02,categories:co,exclusions:[],dex:[],partners:manualPartners.slice(),notes:userNotes||'Earn rates pending — click "Get T&Cs for Added Cards".',milestones:'N/A'};
   cards.push(nc);
   var sel=document.getElementById('data-card-select');if(sel){var o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);}
+  var f4sel=document.getElementById('f4-card-select');if(f4sel){var f4o=document.createElement('option');f4o.value=id;f4o.textContent=name;f4sel.appendChild(f4o);}
   status.textContent='Card added ✓ — click "Get T&Cs for Added Cards" to populate earn rates.';
   status.style.color='var(--success)';
   renderInputsTab();populateTravelSelects();autoSave();
@@ -1453,4 +1455,172 @@ function runCustomSplit() {
   var pd=Object.entries(splitPartnerTotals).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
   var spc=document.getElementById('split-partner-chart');if(spc&&pd.length){if(splitRpChart)splitRpChart.destroy();splitRpChart=new Chart(spc,mkSC(pd.map(function(e){return e[0].split(' (')[0];}),pd.map(function(e){return Math.round(e[1]);}),cc.slice().reverse()));}
   document.getElementById('custom-split-results').style.display='block';
+}
+// ── Feature 4: Card Addition & Renewal Evaluator ──────────────────────────────
+// Side-effect-free optimizer re-run on an arbitrary card list.
+// Temporarily narrows the global `cards` universe, runs all optimizer scenarios
+// (greedy, milestone concentration, within-category splits), then restores.
+function calcOptimizerTotal(cardList) {
+  if (!cardList || !cardList.length) return 0;
+  var origCards = cards;
+  cards = cardList;
+  try {
+    var spends = {};
+    cats.forEach(function(cat){ spends[cat] = getRawSpend(cat); });
+
+    // A: greedy — best earn per category independently
+    var greedyMap = {};
+    cats.forEach(function(cat){
+      var spend = spends[cat] || 0;
+      if (!spend) { greedyMap[cat] = null; return; }
+      var bestCard = null, bestV = 0;
+      cardList.forEach(function(card){ var v = calcV(card, cat, spend); if (v > bestV) { bestCard = card; bestV = v; } });
+      greedyMap[cat] = bestCard;
+    });
+    var best = evalCardMap(greedyMap, spends, null);
+
+    // B/C: milestone concentration scenarios
+    cardList.forEach(function(fc){
+      var fcMB = getEffectiveMilestones(fc); if (!fcMB.length) return;
+      var sMap = {};
+      cats.forEach(function(cat){ sMap[cat] = spends[cat] > 0 ? fc : null; });
+      var rB = evalCardMap(sMap, spends, null);
+      if (rB.totalVal > best.totalVal) best = rB;
+      var fcGreedySpend = 0;
+      cats.forEach(function(cat){ if (greedyMap[cat] === fc) fcGreedySpend += (spends[cat] || 0); });
+      var shiftable = [];
+      cats.forEach(function(cat){
+        var spend = spends[cat] || 0; if (!spend || greedyMap[cat] === fc) return;
+        var curV = greedyMap[cat] ? calcV(greedyMap[cat], cat, spend) : 0;
+        shiftable.push({cat: cat, spend: spend, costPerRupee: (curV - calcV(fc, cat, spend)) / spend});
+      });
+      shiftable.sort(function(a, b){ return a.costPerRupee - b.costPerRupee; });
+      fcMB.forEach(function(m){
+        if (fcGreedySpend >= m.threshold) return;
+        var gap = m.threshold - fcGreedySpend, cMap = Object.assign({}, greedyMap), shifted = 0;
+        for (var i = 0; i < shiftable.length && shifted < gap; i++) { cMap[shiftable[i].cat] = fc; shifted += shiftable[i].spend; }
+        var rC = evalCardMap(cMap, spends, null);
+        if (rC.totalVal > best.totalVal) best = rC;
+      });
+    });
+
+    // D: within-category splits
+    var bestAfterBCMap = {};
+    cats.forEach(function(cat){
+      var a = best.alloc ? best.alloc[cat] : null;
+      bestAfterBCMap[cat] = (a && a.card && !a.isSplit) ? a.card : (greedyMap[cat] || null);
+    });
+    [greedyMap, bestAfterBCMap].forEach(function(baseMap){
+      cats.forEach(function(cat){
+        var spend = spends[cat] || 0; if (!spend) return;
+        for (var pi = 0; pi < cardList.length; pi++) {
+          for (var pj = pi+1; pj < cardList.length; pj++) {
+            var c1 = cardList[pi], c2 = cardList[pj];
+            var ms1 = getEffectiveMilestones(c1), ms2 = getEffectiveMilestones(c2);
+            if (!ms1.length && !ms2.length) continue;
+            var gcs1 = 0, gcs2 = 0;
+            cats.forEach(function(c){
+              if (c === cat) return; var gc = baseMap[c]; if (!gc) return;
+              if (gc.id === c1.id) gcs1 += spends[c] || 0;
+              if (gc.id === c2.id) gcs2 += spends[c] || 0;
+            });
+            var seen = {}, cands = [], ca;
+            for (var s = 1; s <= 9; s++) { ca = Math.round(spend*s/10); if (ca>0&&ca<spend&&!seen[ca]) {seen[ca]=1;cands.push(ca);} }
+            ms1.forEach(function(m){ ca=m.threshold-gcs1; if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);} });
+            ms2.forEach(function(m){ ca=spend-(m.threshold-gcs2); if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);} });
+            for (var k = 0; k < cands.length; k++) {
+              var rD = evalSplitScenario(baseMap, cat, c1, cands[k], c2, spend-cands[k], spends);
+              if (rD.totalVal > best.totalVal) best = rD;
+            }
+          }
+        }
+      });
+    });
+
+    return best.totalVal;
+  } finally {
+    cards = origCards;
+  }
+}
+
+function initF4CardSelect() {
+  var sel = document.getElementById('f4-card-select'); if (!sel) return;
+  sel.innerHTML = cards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  populateF4Fees();
+}
+
+function populateF4Fees() {
+  var cardId = (document.getElementById('f4-card-select')||{}).value; if (!cardId) return;
+  var card = cards.find(function(c){ return c.id === cardId; }); if (!card) return;
+  function sv(id, val) { var el = document.getElementById(id); if (el) el.value = (val !== undefined ? val : 0); }
+  sv('f4-joining-fee', card.annualFee || 0);
+  sv('f4-welcome-pts', 0);
+  sv('f4-welcome-cash', 0);
+  sv('f4-renewal-fee', card.annualFee || 0);
+  sv('f4-renewal-pts', 0);
+  // Compute renewal benefit value from card's renewalBenefits (direct partner miles → ₹)
+  var renewalCash = 0;
+  (card.renewalBenefits || []).forEach(function(rb){
+    renewalCash += (rb.bonusPts || 0) * (pv[canonical(rb.partner)] || 0);
+  });
+  sv('f4-renewal-cash', Math.round(renewalCash));
+  var res = document.getElementById('f4-results'); if (res) res.style.display = 'none';
+}
+
+function runCardEval() {
+  if (!lastAlloc) { alert('Please run the Annual Spend Optimizer (Feature 1) first.'); return; }
+  var cardId = document.getElementById('f4-card-select').value;
+  var card   = cards.find(function(c){ return c.id === cardId; }); if (!card) return;
+
+  var joiningFee  = parseFloat(document.getElementById('f4-joining-fee').value)  || 0;
+  var welcomePts  = parseFloat(document.getElementById('f4-welcome-pts').value)   || 0;
+  var welcomeCash = parseFloat(document.getElementById('f4-welcome-cash').value)  || 0;
+  var renewalFee  = parseFloat(document.getElementById('f4-renewal-fee').value)   || 0;
+  var renewalPts  = parseFloat(document.getElementById('f4-renewal-pts').value)   || 0;
+  var renewalCash = parseFloat(document.getElementById('f4-renewal-cash').value)  || 0;
+
+  var totalWith    = calcOptimizerTotal(cards);
+  var totalWithout = calcOptimizerTotal(cards.filter(function(c){ return c.id !== cardId; }));
+  var incrReward   = totalWith - totalWithout;
+
+  var bp = bestPartner(card);
+  var welcomeVal = welcomePts * bp.val + welcomeCash;
+  var renewalVal = renewalPts * bp.val + renewalCash;
+  var s1Net = incrReward + welcomeVal - joiningFee;
+  var s2Net = incrReward + renewalVal - renewalFee;
+
+  function renderScenario(elId, bonusLabel, bonusVal, fee, feeLabel, net, actionVerb) {
+    var rows = [
+      {l:'Incremental annual reward', v:incrReward, pos:true},
+      {l:bonusLabel, v:bonusVal, pos:true},
+      {l:feeLabel,   v:fee,      pos:false}
+    ];
+    var html = rows.map(function(r){
+      return '<div class="out-metric" style="font-size:.79rem"><span class="oml">'+r.l+'</span>'+
+             '<span class="fm" style="color:'+(r.pos?'var(--success)':'var(--danger)')+'">'+
+             (r.pos?'':'−')+fmt(r.v)+'</span></div>';
+    }).join('');
+    html += '<div style="border-top:2px solid var(--border);margin:.5rem 0 .55rem"></div>';
+    var netColor = net > 0 ? 'var(--success)' : net < 0 ? 'var(--danger)' : 'var(--muted)';
+    html += '<div class="out-metric" style="font-size:.88rem;font-weight:600">'+
+            '<span style="color:var(--text)">Net benefit (Year 1)</span>'+
+            '<span class="fm" style="color:'+netColor+'">'+(net<0?'−':'')+fmt(Math.abs(net))+'</span></div>';
+    if (net > 0) {
+      html += '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:7px;padding:.65rem .9rem;font-size:.79rem;color:var(--success);margin-top:.65rem;line-height:1.55">'+
+              'Rewards increase by '+fmt(net)+'. So you should consider '+actionVerb+'.</div>';
+    } else {
+      html += '<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:7px;padding:.65rem .9rem;font-size:.79rem;color:var(--danger);margin-top:.65rem;line-height:1.55">'+
+              'Does not increase your rewards. So no incremental benefit and in fact, you lose out by paying additional fees.</div>';
+    }
+    document.getElementById(elId).innerHTML = html;
+  }
+
+  renderScenario('f4-s1-content',
+    '+ Welcome bonus', welcomeVal, joiningFee, '− Joining fee', s1Net,
+    'adding this card to your wallet');
+  renderScenario('f4-s2-content',
+    '+ Renewal benefit', renewalVal, renewalFee, '− Renewal fee', s2Net,
+    'renewing this card for the next year');
+
+  document.getElementById('f4-results').style.display = 'block';
 }
