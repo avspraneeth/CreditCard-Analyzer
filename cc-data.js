@@ -1589,7 +1589,7 @@ function runCardEval() {
   var s1Net = incrReward + welcomeVal - joiningFee;
   var s2Net = incrReward + renewalVal - renewalFee;
 
-  function renderScenario(elId, bonusLabel, bonusVal, fee, feeLabel, net, actionVerb) {
+  function renderScenario(elId, bonusLabel, bonusVal, fee, feeLabel, net, actionVerb, yearLabel) {
     var rows = [
       {l:'Incremental annual reward', v:incrReward, pos:true},
       {l:bonusLabel, v:bonusVal, pos:true},
@@ -1603,7 +1603,7 @@ function runCardEval() {
     html += '<div style="border-top:2px solid var(--border);margin:.5rem 0 .55rem"></div>';
     var netColor = net > 0 ? 'var(--success)' : net < 0 ? 'var(--danger)' : 'var(--muted)';
     html += '<div class="out-metric" style="font-size:.88rem;font-weight:600">'+
-            '<span style="color:var(--text)">Net benefit (Year 1)</span>'+
+            '<span style="color:var(--text)">Net benefit ('+(yearLabel||'Year 1')+')</span>'+
             '<span class="fm" style="color:'+netColor+'">'+(net<0?'−':'')+fmt(Math.abs(net))+'</span></div>';
     if (net > 0) {
       html += '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:7px;padding:.65rem .9rem;font-size:.79rem;color:var(--success);margin-top:.65rem;line-height:1.55">'+
@@ -1617,10 +1617,10 @@ function runCardEval() {
 
   renderScenario('f4-s1-content',
     '+ Welcome bonus', welcomeVal, joiningFee, '− Joining fee', s1Net,
-    'adding this card to your wallet');
+    'adding this card to your wallet', 'Year 1');
   renderScenario('f4-s2-content',
     '+ Renewal benefit', renewalVal, renewalFee, '− Renewal fee', s2Net,
-    'renewing this card for the next year');
+    'renewing this card for the next year', 'Year 2+');
 
   document.getElementById('f4-results').style.display = 'block';
 }
