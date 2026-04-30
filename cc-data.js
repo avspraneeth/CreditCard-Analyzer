@@ -1555,52 +1555,72 @@ function getSelectedCardIds() {
   return ids;
 }
 
+// Returns card object from wallet or from _LEGACY_DC (for not-yet-added cards)
+function findF4Card(cardId) {
+  return cards.find(function(c){ return c.id === cardId; }) ||
+         _LEGACY_DC.find(function(c){ return c.id === cardId; }) || null;
+}
+
+// Looks up BUILTIN_CARD_INFO entry by card name (for fee/renewal data on _LEGACY_DC cards)
+function getBuiltinInfo(card) {
+  var n = card.name.toLowerCase().trim();
+  return BUILTIN_CARD_INFO.find(function(b){
+    return b.names.some(function(bn){
+      var bl = bn.toLowerCase();
+      return bl === n || (bl.length >= 7 && n.includes(bl)) || (n.length >= 7 && bl.includes(n));
+    });
+  }) || null;
+}
+
 function initF4CardSelect() {
   var sel = document.getElementById('f4-card-select'); if (!sel) return;
   var selectedIds = getSelectedCardIds();
-  var hasGroups = Object.keys(selectedIds).length > 0;
-  if (!hasGroups) {
-    sel.innerHTML = '<optgroup label="New Cards">' +
-      cards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
+  var walletIds = {};
+  cards.forEach(function(c){ walletIds[c.id] = true; });
+
+  // Existing cards: in wallet but NOT selected by optimizer
+  var existingCards = cards.filter(function(c){ return !selectedIds[c.id]; });
+
+  // New cards: in _LEGACY_DC but NOT yet in wallet
+  var newCards = _LEGACY_DC.filter(function(c){ return !walletIds[c.id]; });
+
+  var html = '';
+  if (existingCards.length)
+    html += '<optgroup label="Existing Cards (Renewal)">' +
+      existingCards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
       '</optgroup>';
-  } else {
-    var renewals = cards.filter(function(c){ return selectedIds[c.id]; });
-    var newCards = cards.filter(function(c){ return !selectedIds[c.id]; });
-    var html = '';
-    if (renewals.length)
-      html += '<optgroup label="Renewals">' +
-        renewals.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
-        '</optgroup>';
-    if (newCards.length)
-      html += '<optgroup label="New Cards">' +
-        newCards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
-        '</optgroup>';
-    sel.innerHTML = html;
-  }
+  if (newCards.length)
+    html += '<optgroup label="New Cards (Joining)">' +
+      newCards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
+      '</optgroup>';
+  if (!html)
+    html = '<option value="" disabled>All cards are in the active optimizer</option>';
+  sel.innerHTML = html;
   populateF4Fees();
 }
 
 function populateF4Fees() {
   var cardId = (document.getElementById('f4-card-select')||{}).value; if (!cardId) return;
-  var card = cards.find(function(c){ return c.id === cardId; }); if (!card) return;
+  var card = findF4Card(cardId); if (!card) return;
+  // Fee data lives on card if it was patched, otherwise fall back to BUILTIN_CARD_INFO
+  var info = (card.annualFee !== undefined) ? card : (getBuiltinInfo(card) || {});
   function sv(id, val) { var el = document.getElementById(id); if (el) el.value = (val !== undefined ? val : 0); }
-  sv('f4-joining-fee', card.annualFee || 0);
+  sv('f4-joining-fee', info.annualFee || 0);
   sv('f4-welcome-pts', 0);
   sv('f4-welcome-cash', 0);
-  sv('f4-renewal-fee', card.annualFee || 0);
+  sv('f4-renewal-fee', info.annualFee || 0);
   sv('f4-renewal-pts', 0);
+  var rb = card.renewalBenefits || (info.renewalBenefits || []);
   var renewalCash = 0;
-  (card.renewalBenefits || []).forEach(function(rb){
-    renewalCash += (rb.bonusPts || 0) * (pv[canonical(rb.partner)] || 0);
-  });
+  rb.forEach(function(r){ renewalCash += (r.bonusPts || 0) * (pv[canonical(r.partner)] || 0); });
   sv('f4-renewal-cash', Math.round(renewalCash));
   var res = document.getElementById('f4-results'); if (res) res.style.display = 'none';
 }
 
 function runCardEval() {
   if (!lastAlloc) { alert('Please run the Annual Spend Optimizer (Feature 1) first.'); return; }
-  var cardId = document.getElementById('f4-card-select').value;
-  var card   = cards.find(function(c){ return c.id === cardId; }); if (!card) return;
+  var cardId = document.getElementById('f4-card-select').value; if (!cardId) return;
+  var card   = findF4Card(cardId); if (!card) return;
 
   var joiningFee  = parseFloat(document.getElementById('f4-joining-fee').value)  || 0;
   var welcomePts  = parseFloat(document.getElementById('f4-welcome-pts').value)   || 0;
@@ -1609,11 +1629,15 @@ function runCardEval() {
   var renewalPts  = parseFloat(document.getElementById('f4-renewal-pts').value)   || 0;
   var renewalCash = parseFloat(document.getElementById('f4-renewal-cash').value)  || 0;
 
-  var selectedIds  = getSelectedCardIds();
-  var isRenewal    = !!selectedIds[cardId];
-  var selectedCards = cards.filter(function(c){ return selectedIds[c.id]; });
-  var withList     = isRenewal ? selectedCards : selectedCards.concat([card]);
-  var withoutList  = isRenewal ? selectedCards.filter(function(c){ return c.id !== cardId; }) : selectedCards;
+  // Is this card already in the wallet (existing card) or a new addition?
+  var walletIds = {};
+  cards.forEach(function(c){ walletIds[c.id] = true; });
+  var isExisting = !!walletIds[cardId];
+
+  // Existing card: compare wallet with vs without (incrReward ≈ 0 since optimizer doesn't use it)
+  // New card: compare wallet+card vs wallet alone (true marginal value of adding)
+  var withList    = isExisting ? cards                   : cards.concat([card]);
+  var withoutList = isExisting ? cards.filter(function(c){ return c.id !== cardId; }) : cards;
   var totalWith    = calcOptimizerTotal(withList);
   var totalWithout = calcOptimizerTotal(withoutList);
   var incrReward   = totalWith - totalWithout;
