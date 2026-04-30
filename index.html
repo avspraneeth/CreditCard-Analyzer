@@ -270,6 +270,63 @@ code{background:var(--surface2);padding:.08rem .38rem;border-radius:3px;font-fam
       </div>
     </div>
   </div>
+  <hr class="divider">
+
+  <!-- Feature 4: Card Addition & Renewal Evaluator -->
+  <div style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:.25rem">Feature 4 — Card Addition &amp; Renewal Evaluator</div>
+  <div style="font-size:.8rem;color:var(--muted);margin-bottom:.9rem">Evaluate whether adding or renewing a card increases your net rewards — run Feature 1 first to establish your baseline</div>
+  <div class="card" style="margin-bottom:1.2rem">
+    <!-- Card selector + button -->
+    <div class="g2" style="gap:.85rem;margin-bottom:.9rem;align-items:end">
+      <div class="field" style="margin-bottom:0"><label>Card to Evaluate</label>
+        <select id="f4-card-select" onchange="populateF4Fees()"></select>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-primary" onclick="runCardEval()" style="width:100%">Evaluate Card →</button>
+      </div>
+    </div>
+    <!-- Fee / benefit inputs -->
+    <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem">
+      Fees &amp; Benefits <span style="text-transform:none;font-weight:400;color:var(--muted)">(pre-filled from defaults — edit as needed)</span>
+    </div>
+    <div class="g2" style="gap:.8rem;margin-bottom:.6rem">
+      <!-- Scenario 1 inputs -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+        <div style="font-size:.71rem;font-weight:600;color:var(--accent);margin-bottom:.55rem;text-transform:uppercase;letter-spacing:.05em">Joining — New Card</div>
+        <div class="g3" style="gap:.5rem">
+          <div class="field" style="margin-bottom:0"><label>Joining Fee (₹)</label><input type="number" id="f4-joining-fee" min="0" step="100" value="0"></div>
+          <div class="field" style="margin-bottom:0"><label>Welcome Pts</label><input type="number" id="f4-welcome-pts" min="0" step="100" value="0"></div>
+          <div class="field" style="margin-bottom:0"><label>Welcome Cash (₹)</label><input type="number" id="f4-welcome-cash" min="0" step="100" value="0"></div>
+        </div>
+      </div>
+      <!-- Scenario 2 inputs -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+        <div style="font-size:.71rem;font-weight:600;color:var(--accent2);margin-bottom:.55rem;text-transform:uppercase;letter-spacing:.05em">Renewal — Existing Card</div>
+        <div class="g3" style="gap:.5rem">
+          <div class="field" style="margin-bottom:0"><label>Renewal Fee (₹)</label><input type="number" id="f4-renewal-fee" min="0" step="100" value="0"></div>
+          <div class="field" style="margin-bottom:0"><label>Renewal Pts</label><input type="number" id="f4-renewal-pts" min="0" step="100" value="0"></div>
+          <div class="field" style="margin-bottom:0"><label>Renewal Cash (₹)</label><input type="number" id="f4-renewal-cash" min="0" step="100" value="0"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Results (hidden until Evaluate is clicked) -->
+    <div id="f4-results" style="display:none">
+      <hr class="divider" style="margin:.55rem 0 .85rem">
+      <div class="g2" style="gap:1rem">
+        <!-- Scenario 1 result -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.9rem">
+          <div style="font-size:.75rem;font-weight:600;color:var(--accent);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Scenario 1 — Adding Card</div>
+          <div id="f4-s1-content"></div>
+        </div>
+        <!-- Scenario 2 result -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.9rem">
+          <div style="font-size:.75rem;font-weight:600;color:var(--accent2);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Scenario 2 — Renewal</div>
+          <div id="f4-s2-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="disclaimer">⚡ Calculations based on researched T&amp;C data (April 2026). Point values set in the Inputs tab. Verify with your bank before large transactions.</div>
 </div>
 

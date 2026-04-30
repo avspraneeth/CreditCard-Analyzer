@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   initSpendInputs();
   populateTravelSelects();
+  initF4CardSelect();
   restoreState();
 });
 

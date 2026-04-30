@@ -256,6 +256,25 @@ var MILESTONES = {
   ]
 };
 
+// ── Feature 4: Card fee & benefit defaults ────────────────────────────────────
+// joiningFee / renewalFee in ₹; bonusPts in card's native currency; bonusCash in ₹
+var CARD_FEES = {
+  'axis_vistara':      {joiningFee:10000, welcomeBonusPts:0,     welcomeBonusCash:15000, renewalFee:10000, renewalBenefitPts:0,     renewalBenefitCash:15000},
+  'axis_atlas':        {joiningFee:5000,  welcomeBonusPts:5000,  welcomeBonusCash:0,     renewalFee:5000,  renewalBenefitPts:2500,  renewalBenefitCash:0},
+  'indusind_avios':    {joiningFee:10000, welcomeBonusPts:10000, welcomeBonusCash:0,     renewalFee:10000, renewalBenefitPts:5000,  renewalBenefitCash:0},
+  'bob_etihad':        {joiningFee:1499,  welcomeBonusPts:2500,  welcomeBonusCash:0,     renewalFee:1499,  renewalBenefitPts:2500,  renewalBenefitCash:0},
+  'icici_emirates':    {joiningFee:10000, welcomeBonusPts:10000, welcomeBonusCash:0,     renewalFee:10000, renewalBenefitPts:5000,  renewalBenefitCash:0},
+  'icici_times_black': {joiningFee:30000, welcomeBonusPts:0,     welcomeBonusCash:5000,  renewalFee:30000, renewalBenefitPts:0,     renewalBenefitCash:5000},
+  'hdfc_tata_neu':     {joiningFee:1499,  welcomeBonusPts:0,     welcomeBonusCash:1499,  renewalFee:1499,  renewalBenefitPts:0,     renewalBenefitCash:1499},
+  'hdfc_marriott':     {joiningFee:3000,  welcomeBonusPts:10000, welcomeBonusCash:0,     renewalFee:3000,  renewalBenefitPts:10000, renewalBenefitCash:0},
+  'amex_plat_travel':  {joiningFee:3500,  welcomeBonusPts:5000,  welcomeBonusCash:0,     renewalFee:3500,  renewalBenefitPts:5000,  renewalBenefitCash:0},
+  'hsbc_premier':      {joiningFee:0,     welcomeBonusPts:5000,  welcomeBonusCash:0,     renewalFee:0,     renewalBenefitPts:5000,  renewalBenefitCash:0},
+  'hsbc_travelone':    {joiningFee:4999,  welcomeBonusPts:3000,  welcomeBonusCash:0,     renewalFee:4999,  renewalBenefitPts:3000,  renewalBenefitCash:0},
+  'sbi_card_elite':    {joiningFee:4999,  welcomeBonusPts:0,     welcomeBonusCash:1250,  renewalFee:4999,  renewalBenefitPts:0,     renewalBenefitCash:1250},
+  'icici_mmt':         {joiningFee:999,   welcomeBonusPts:0,     welcomeBonusCash:1000,  renewalFee:999,   renewalBenefitPts:0,     renewalBenefitCash:500},
+  'amex_plat_reserve': {joiningFee:10000, welcomeBonusPts:5000,  welcomeBonusCash:0,     renewalFee:10000, renewalBenefitPts:5000,  renewalBenefitCash:0}
+};
+
 function milestoneBonusVal(card, spend) {
   var ms=MILESTONES[card.id]; if(!ms) return 0;
   var bpVal=bestPartner(card).val, total=0;
@@ -827,6 +846,7 @@ function removeCard(cardId) {
   var inUse=new Set();cards.forEach(function(c){(c.partners||[]).forEach(function(p){inUse.add(canonical(p.name));});});
   Object.keys(pv).forEach(function(k){if(!inUse.has(k))delete pv[k];});
   var sel=document.getElementById('data-card-select');if(sel){var o=sel.querySelector('option[value="'+cardId+'"]');if(o)o.remove();}
+  var f4sel=document.getElementById('f4-card-select');if(f4sel){var o4=f4sel.querySelector('option[value="'+cardId+'"]');if(o4)o4.remove();if(f4sel.options.length)populateF4Fees();}
   renderInputsTab();populateTravelSelects();
 }
 function openAddCardModal() {
@@ -860,6 +880,7 @@ async function submitAddCard() {
   }catch(e){status.textContent='Card added \u2713 (T\u0026C lookup failed)';}
   status.style.color='var(--success)';
   var sel=document.getElementById('data-card-select');if(sel){var o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);}
+  var f4sel=document.getElementById('f4-card-select');if(f4sel){var o4=document.createElement('option');o4.value=id;o4.textContent=name;f4sel.appendChild(o4);}
   renderInputsTab();populateTravelSelects();setTimeout(closeAddCardModal,1500);
 }
 // ── Feature 2: Custom Split Redemption ────────────────────────────────────────
@@ -894,4 +915,116 @@ function runCustomSplit() {
   var pd=Object.entries(splitPartnerTotals).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
   var spc=document.getElementById('split-partner-chart');if(spc&&pd.length){if(splitRpChart)splitRpChart.destroy();splitRpChart=new Chart(spc,mkSC(pd.map(function(e){return e[0].split(' (')[0];}),pd.map(function(e){return Math.round(e[1]);}),cc.slice().reverse()));}
   document.getElementById('custom-split-results').style.display='block';
+}
+// ── Feature 4: Card Addition & Renewal Evaluator ──────────────────────────────
+// Re-runs optimizer logic on a given cardList without touching the DOM
+function calcOptimizerTotal(cardList) {
+  if (!cardList || !cardList.length) return 0;
+  var total = 0;
+  cats.forEach(function(cat) {
+    var spend = getRawSpend(cat); if (!spend) return;
+    var best = null, bestVms = 0;
+    cardList.forEach(function(card) {
+      var vms = calcV(card, cat, spend) + milestoneBonusVal(card, spend);
+      if (vms > bestVms) { best = card; bestVms = vms; }
+    });
+    var netBest = bestVms;
+    if (cat === 'International Transactions' && best) netBest = Math.max(0, bestVms - forexCost(best, spend));
+    var bestSplitV = netBest, splitFound = false;
+    for (var pi = 0; pi < cardList.length; pi++) {
+      for (var pj = pi+1; pj < cardList.length; pj++) {
+        var c1=cardList[pi], c2=cardList[pj];
+        var ms1=MILESTONES[c1.id]||[], ms2=MILESTONES[c2.id]||[];
+        if (!ms1.length && !ms2.length) continue;
+        var seen={}, cands=[], ca;
+        for(var s=1;s<=9;s++){ca=Math.round(spend*s/10);if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        for(var t=0;t<ms1.length;t++){ca=ms1[t].threshold;if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        for(var t=0;t<ms2.length;t++){ca=spend-ms2[t].threshold;if(ca>0&&ca<spend&&!seen[ca]){seen[ca]=1;cands.push(ca);}}
+        for(var k=0;k<cands.length;k++){
+          var a1=cands[k], a2=spend-a1;
+          var sv=catSplitVal(c1,cat,a1)+catSplitVal(c2,cat,a2);
+          if(sv>bestSplitV){bestSplitV=sv;splitFound=true;}
+        }
+      }
+    }
+    total += splitFound ? bestSplitV : netBest;
+  });
+  return total;
+}
+
+function initF4CardSelect() {
+  var sel = document.getElementById('f4-card-select'); if (!sel) return;
+  sel.innerHTML = cards.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  populateF4Fees();
+}
+
+function populateF4Fees() {
+  var cardId = (document.getElementById('f4-card-select')||{}).value; if (!cardId) return;
+  var fees = CARD_FEES[cardId] || {};
+  function sv(id, val) { var el=document.getElementById(id); if (el) el.value = (val !== undefined ? val : 0); }
+  sv('f4-joining-fee',  fees.joiningFee);
+  sv('f4-welcome-pts',  fees.welcomeBonusPts);
+  sv('f4-welcome-cash', fees.welcomeBonusCash);
+  sv('f4-renewal-fee',  fees.renewalFee);
+  sv('f4-renewal-pts',  fees.renewalBenefitPts);
+  sv('f4-renewal-cash', fees.renewalBenefitCash);
+  var res = document.getElementById('f4-results'); if (res) res.style.display = 'none';
+}
+
+function runCardEval() {
+  if (!lastAlloc) { alert('Please run the Annual Spend Optimizer (Feature 1) first.'); return; }
+  var cardId = document.getElementById('f4-card-select').value;
+  var card   = cards.find(function(c){ return c.id === cardId; }); if (!card) return;
+
+  var joiningFee  = parseFloat(document.getElementById('f4-joining-fee').value)  || 0;
+  var welcomePts  = parseFloat(document.getElementById('f4-welcome-pts').value)   || 0;
+  var welcomeCash = parseFloat(document.getElementById('f4-welcome-cash').value)  || 0;
+  var renewalFee  = parseFloat(document.getElementById('f4-renewal-fee').value)   || 0;
+  var renewalPts  = parseFloat(document.getElementById('f4-renewal-pts').value)   || 0;
+  var renewalCash = parseFloat(document.getElementById('f4-renewal-cash').value)  || 0;
+
+  var totalWith    = calcOptimizerTotal(cards);
+  var totalWithout = calcOptimizerTotal(cards.filter(function(c){ return c.id !== cardId; }));
+  var incrReward   = totalWith - totalWithout;
+
+  var bp = bestPartner(card);
+  var welcomeVal = welcomePts * bp.val + welcomeCash;
+  var renewalVal = renewalPts * bp.val + renewalCash;
+  var s1Net = incrReward + welcomeVal - joiningFee;
+  var s2Net = incrReward + renewalVal - renewalFee;
+
+  function renderScenario(elId, bonusLabel, bonusVal, fee, feeLabel, net, actionVerb) {
+    var rows = [
+      {l:'Incremental annual reward', v:incrReward, pos:true},
+      {l:bonusLabel, v:bonusVal, pos:true},
+      {l:feeLabel,   v:fee,      pos:false}
+    ];
+    var html = rows.map(function(r){
+      return '<div class="out-metric" style="font-size:.79rem"><span class="oml">'+r.l+'</span>'+
+             '<span class="fm" style="color:'+(r.pos?'var(--success)':'var(--danger)')+'">'+
+             (r.pos?'':'−')+fmt(r.v)+'</span></div>';
+    }).join('');
+    html += '<div style="border-top:2px solid var(--border);margin:.5rem 0 .55rem"></div>';
+    var netColor = net > 0 ? 'var(--success)' : net < 0 ? 'var(--danger)' : 'var(--muted)';
+    html += '<div class="out-metric" style="font-size:.88rem;font-weight:600">'+
+            '<span style="color:var(--text)">Net benefit (Year 1)</span>'+
+            '<span class="fm" style="color:'+netColor+'">'+(net<0?'−':'')+fmt(Math.abs(net))+'</span></div>';
+    if (net > 0) {
+      html += '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:7px;padding:.65rem .9rem;font-size:.79rem;color:var(--success);margin-top:.65rem;line-height:1.55">'+
+              'Rewards increase by '+fmt(net)+'. So you should consider '+actionVerb+'.</div>';
+    } else {
+      html += '<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:7px;padding:.65rem .9rem;font-size:.79rem;color:var(--danger);margin-top:.65rem;line-height:1.55">'+
+              'Does not increase your rewards. So no incremental benefit and in fact, you lose out by paying additional fees.</div>';
+    }
+    document.getElementById(elId).innerHTML = html;
+  }
+
+  renderScenario('f4-s1-content',
+    '+ Welcome bonus', welcomeVal, joiningFee, '− Joining fee', s1Net,
+    'adding this card to your wallet');
+  renderScenario('f4-s2-content',
+    '+ Renewal benefit', renewalVal, renewalFee, '− Renewal fee', s2Net,
+    'renewing this card for the next year');
+
+  document.getElementById('f4-results').style.display = 'block';
 }
