@@ -88,15 +88,22 @@ var ALLIANCE = {
 var BUILTIN_CARD_INFO = [
   {names:["IndusInd Avios Infinite","IndusInd Avios","IndusInd Bank Avios Infinite"],
    milestoneBonus:[{threshold:800000,bonusPts:18000,label:"18,000 bonus Avios at Rs.8L annual spend"}],
-   annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.10L spend",renewalBenefits:[]},
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.10L spend",
+   welcomeBonus:{bonusPts:10000,bonusCash:0,label:"10,000 Avios on joining"},
+   renewalBenefits:[{bonusPts:5000,partner:"British Airways (Avios)",label:"5,000 Avios on card renewal"}]},
+
   {names:["BOBCard Etihad Guest Premier","BobCard Etihad Guest Premier","Bank of Baroda Etihad Guest Premier","BOB Etihad Guest Premier","BOB Etihad"],
    milestoneBonus:[],
    annualFee:5899,feeNote:"Rs.4,999 + 18% GST",
-   renewalBenefits:[{bonusPts:5000,partner:"Etihad Guest",label:"5,000 Etihad miles on card anniversary"}]},
+   welcomeBonus:{bonusPts:2500,bonusCash:0,label:"2,500 Etihad Guest miles on joining"},
+   renewalBenefits:[{bonusPts:5000,partner:"Etihad Guest",label:"5,000 Etihad Guest miles on card anniversary"}]},
+
   {names:["ICICI Emirates Emeralde","ICICI Emirates","Emirates Emeralde","ICICI Bank Emirates Emeralde"],
    milestoneBonus:[],
    annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
+   welcomeBonus:{bonusPts:10000,bonusCash:0,label:"10,000 Emirates Skywards miles on joining"},
    renewalBenefits:[{bonusPts:5000,partner:"Emirates Skywards",label:"5,000 Emirates Skywards miles on card anniversary"}]},
+
   {names:["ICICI Times Black","Times Black","ICICI Bank Times Black"],
    milestoneBonus:[
      {threshold:200000,bonusValue:10000,label:"₹10,000 Klook voucher at Rs.2L spend"},
@@ -104,17 +111,26 @@ var BUILTIN_CARD_INFO = [
      {threshold:1000000,bonusValue:10000,label:"₹10,000 Tata CLiQ Luxury gift card at Rs.10L spend"},
      {threshold:2000000,bonusValue:20000,label:"₹20,000 Ayatana/Lohono luxury stay at Rs.20L spend"}
    ],
-   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",renewalBenefits:[]},
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
+   welcomeBonus:{bonusPts:0,bonusCash:5000,label:"₹5,000 Tata CLiQ Luxury gift card on joining"},
+   renewalBenefits:[{bonusCash:5000,label:"₹5,000 Tata CLiQ Luxury gift card on renewal"}]},
+
   {names:["American Express Platinum Travel","Amex Platinum Travel","Amex Plat Travel","AmEx Platinum Travel"],
    milestoneBonus:[
      {threshold:190000,bonusPts:7500,label:"7,500 bonus MR at Rs.1.9L spend"},
      {threshold:400000,bonusPts:10000,label:"10,000 bonus MR at Rs.4L spend"},
      {threshold:700000,bonusPts:22500,bonusValue:10000,label:"22,500 bonus MR + ₹10,000 Taj voucher at Rs.7L spend"}
    ],
-   annualFee:4130,feeNote:"Rs.3,500 + 18% GST",renewalBenefits:[]},
+   annualFee:4130,feeNote:"Rs.3,500 + 18% GST",
+   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 MR points on joining (1:1 transfer to airlines)"},
+   renewalBenefits:[{bonusPts:5000,partner:"Singapore Airlines (KrisFlyer)",label:"5,000 MR points on renewal (1:1 transfer = 5,000 airline miles)"}]},
+
   {names:["American Express Platinum Reserve","Amex Platinum Reserve","Amex Plat Reserve","AmEx Platinum Reserve"],
    milestoneBonus:[],
-   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",renewalBenefits:[]},
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
+   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 MR points on joining (2:1 transfer to airlines)"},
+   renewalBenefits:[{bonusPts:2500,partner:"Singapore Airlines (KrisFlyer)",label:"5,000 MR points on renewal (2:1 transfer = 2,500 airline miles)"}]},
+
   {names:["Axis Atlas","Axis Bank Atlas","Axis Atlas Credit Card"],
    milestoneBonus:[
      {threshold:300000,bonusPts:2500,label:"2,500 bonus EDGE miles at Rs.3L spend"},
@@ -122,11 +138,13 @@ var BUILTIN_CARD_INFO = [
      {threshold:1500000,bonusPts:10000,label:"10,000 bonus EDGE miles + Platinum tier at Rs.15L spend"}
    ],
    annualFee:5900,feeNote:"Rs.5,000 + 18% GST; waived at Rs.7.5L spend",
+   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 EDGE miles on joining (Silver tier)"},
    renewalBenefits:[
-     {bonusPts:5000,partner:'Singapore Airlines (KrisFlyer)',label:'5,000 EDGE miles on renewal (Silver tier)',minSpend:0},
-     {bonusPts:7500,partner:'Singapore Airlines (KrisFlyer)',label:'7,500 EDGE miles on renewal (Gold tier)',minSpend:750000},
-     {bonusPts:10000,partner:'Singapore Airlines (KrisFlyer)',label:'10,000 EDGE miles on renewal (Platinum tier)',minSpend:1500000}
+     {bonusPts:5000,partner:"Singapore Airlines (KrisFlyer)",label:"5,000 EDGE miles on renewal (Silver tier)",minSpend:0},
+     {bonusPts:7500,partner:"Singapore Airlines (KrisFlyer)",label:"7,500 EDGE miles on renewal (Gold tier)",minSpend:750000},
+     {bonusPts:10000,partner:"Singapore Airlines (KrisFlyer)",label:"10,000 EDGE miles on renewal (Platinum tier)",minSpend:1500000}
    ]},
+
   {names:["Axis Vistara Infinite","Axis Vistara","Axis Bank Vistara Infinite","Axis Bank Vistara"],
    milestoneBonus:[
      {threshold:100000,bonusPts:10000,label:"10,000 bonus CV Points at Rs.1L spend"},
@@ -135,26 +153,49 @@ var BUILTIN_CARD_INFO = [
      {threshold:750000,bonusValue:20000,label:"Business Class ticket voucher at Rs.7.5L spend"},
      {threshold:1200000,bonusValue:20000,label:"Business Class ticket voucher at Rs.12L spend"}
    ],
-   annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.12L spend",renewalBenefits:[]},
+   annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.12L spend",
+   welcomeBonus:{bonusPts:0,bonusCash:15000,label:"Complimentary Business Class upgrade voucher (~₹15,000 value) on joining"},
+   renewalBenefits:[]},
+
   {names:["HSBC TravelOne","HSBC Travel One","HSBC TravelOne Credit Card"],
    milestoneBonus:[{threshold:1200000,bonusPts:10000,label:"10,000 bonus points at Rs.12L annual spend"}],
-   annualFee:5899,feeNote:"Rs.4,999 + 18% GST; waived at Rs.8L spend",renewalBenefits:[]},
+   annualFee:5899,feeNote:"Rs.4,999 + 18% GST; waived at Rs.8L spend",
+   welcomeBonus:{bonusPts:3000,bonusCash:0,label:"3,000 HSBC Reward Points on joining"},
+   renewalBenefits:[]},
+
   {names:["HSBC Premier","HSBC Premier Mastercard","HSBC Premier Credit Card"],
    milestoneBonus:[],
-   annualFee:0,feeNote:"Complimentary for HSBC Premier banking customers",renewalBenefits:[]},
+   annualFee:0,feeNote:"Complimentary for HSBC Premier banking customers",
+   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 HSBC Reward Points on joining"},
+   renewalBenefits:[]},
+
   {names:["HDFC Marriott Bonvoy","HDFC Marriott","HDFC Bank Marriott Bonvoy"],
    milestoneBonus:[
      {threshold:600000,bonusValue:8000,label:"1 Free Night Award at Rs.6L spend"},
      {threshold:900000,bonusValue:8000,label:"2nd Free Night Award at Rs.9L spend"},
      {threshold:1500000,bonusValue:16000,label:"3rd + 4th Free Night Awards at Rs.15L spend"}
    ],
-   annualFee:3540,feeNote:"Rs.3,000 + 18% GST",renewalBenefits:[]},
+   annualFee:3540,feeNote:"Rs.3,000 + 18% GST",
+   welcomeBonus:{bonusPts:15000,bonusCash:0,label:"Free Night Award (up to 15,000 Marriott Bonvoy points) on joining"},
+   renewalBenefits:[{bonusPts:15000,partner:"Marriott Bonvoy",label:"Free Night Award (up to 15,000 Marriott Bonvoy points) every year on renewal"}]},
+
   {names:["HDFC Tata Neu Infinity","HDFC Tata Neu","Tata Neu Infinity","Tata Neu Infinity HDFC"],
    milestoneBonus:[],
-   annualFee:1769,feeNote:"Rs.1,499 + 18% GST; waived at Rs.3L spend",renewalBenefits:[]},
+   annualFee:1769,feeNote:"Rs.1,499 + 18% GST; waived at Rs.3L spend",
+   welcomeBonus:{bonusPts:0,bonusCash:1499,label:"₹1,499 NeuCoins on joining"},
+   renewalBenefits:[{bonusCash:1499,label:"₹1,499 NeuCoins on renewal"}]},
+
   {names:["ICICI MakeMyTrip","ICICI MMT","MakeMyTrip ICICI","ICICI Bank MakeMyTrip"],
    milestoneBonus:[],
-   annualFee:1179,feeNote:"Rs.999 + 18% GST",renewalBenefits:[]}
+   annualFee:1179,feeNote:"Rs.999 + 18% GST",
+   welcomeBonus:{bonusPts:0,bonusCash:1000,label:"₹1,000 myCash on joining"},
+   renewalBenefits:[{bonusCash:500,label:"₹500 myCash on renewal"}]},
+
+  {names:["SBI Card Elite","SBI Elite","SBI Credit Card Elite"],
+   milestoneBonus:[],
+   annualFee:5899,feeNote:"Rs.4,999 + 18% GST; waived at Rs.10L spend",
+   welcomeBonus:{bonusPts:0,bonusCash:5000,label:"₹5,000 e-Gift voucher on joining"},
+   renewalBenefits:[{bonusCash:5000,label:"₹5,000 e-Gift voucher on renewal"}]}
 ];
 
 function patchCardsFromBuiltins() {
@@ -174,6 +215,8 @@ function patchCardsFromBuiltins() {
     if (match.feeNote) card.feeNote = match.feeNote;
     if (Array.isArray(match.renewalBenefits))
       card.renewalBenefits = JSON.parse(JSON.stringify(match.renewalBenefits));
+    if (match.welcomeBonus)
+      card.welcomeBonus = JSON.parse(JSON.stringify(match.welcomeBonus));
   });
 }
 
@@ -1602,17 +1645,21 @@ function initF4CardSelect() {
 function populateF4Fees() {
   var cardId = (document.getElementById('f4-card-select')||{}).value; if (!cardId) return;
   var card = findF4Card(cardId); if (!card) return;
-  // Fee data lives on card if it was patched, otherwise fall back to BUILTIN_CARD_INFO
+  // Fee/bonus data lives on card if patched, otherwise fall back to BUILTIN_CARD_INFO
   var info = (card.annualFee !== undefined) ? card : (getBuiltinInfo(card) || {});
   function sv(id, val) { var el = document.getElementById(id); if (el) el.value = (val !== undefined ? val : 0); }
   sv('f4-joining-fee', info.annualFee || 0);
-  sv('f4-welcome-pts', 0);
-  sv('f4-welcome-cash', 0);
   sv('f4-renewal-fee', info.annualFee || 0);
+  var wb = card.welcomeBonus || (info.welcomeBonus || {});
+  sv('f4-welcome-pts',  wb.bonusPts  || 0);
+  sv('f4-welcome-cash', wb.bonusCash || 0);
   sv('f4-renewal-pts', 0);
   var rb = card.renewalBenefits || (info.renewalBenefits || []);
   var renewalCash = 0;
-  rb.forEach(function(r){ renewalCash += (r.bonusPts || 0) * (pv[canonical(r.partner)] || 0); });
+  rb.forEach(function(r){
+    renewalCash += (r.bonusPts || 0) * (pv[canonical(r.partner || '')] || 0);
+    renewalCash += (r.bonusCash || 0);
+  });
   sv('f4-renewal-cash', Math.round(renewalCash));
   var res = document.getElementById('f4-results'); if (res) res.style.display = 'none';
 }
