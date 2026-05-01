@@ -95,14 +95,14 @@ var BUILTIN_CARD_INFO = [
   {names:["BOBCard Etihad Guest Premier","BobCard Etihad Guest Premier","Bank of Baroda Etihad Guest Premier","BOB Etihad Guest Premier","BOB Etihad"],
    milestoneBonus:[],
    annualFee:5899,feeNote:"Rs.4,999 + 18% GST",
-   welcomeBonus:{bonusPts:2500,bonusCash:0,label:"2,500 Etihad Guest miles on joining"},
+   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 Etihad Guest miles on joining"},
    renewalBenefits:[{bonusPts:5000,partner:"Etihad Guest",label:"5,000 Etihad Guest miles on card anniversary"}]},
 
   {names:["ICICI Emirates Emeralde","ICICI Emirates","Emirates Emeralde","ICICI Bank Emirates Emeralde"],
    milestoneBonus:[],
    annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
    welcomeBonus:{bonusPts:10000,bonusCash:0,label:"10,000 Emirates Skywards miles on joining"},
-   renewalBenefits:[{bonusPts:5000,partner:"Emirates Skywards",label:"5,000 Emirates Skywards miles on card anniversary"}]},
+   renewalBenefits:[{bonusPts:10000,partner:"Emirates Skywards",label:"10,000 Emirates Skywards miles on card anniversary"}]},
 
   {names:["ICICI Times Black","Times Black","ICICI Bank Times Black"],
    milestoneBonus:[
@@ -112,8 +112,8 @@ var BUILTIN_CARD_INFO = [
      {threshold:2000000,bonusValue:20000,label:"₹20,000 Ayatana/Lohono luxury stay at Rs.20L spend"}
    ],
    annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
-   welcomeBonus:{bonusPts:0,bonusCash:5000,label:"₹5,000 Tata CLiQ Luxury gift card on joining"},
-   renewalBenefits:[{bonusCash:5000,label:"₹5,000 Tata CLiQ Luxury gift card on renewal"}]},
+   welcomeBonus:{bonusPts:0,bonusCash:0,label:""},
+   renewalBenefits:[]},
 
   {names:["American Express Platinum Travel","Amex Platinum Travel","Amex Plat Travel","AmEx Platinum Travel"],
    milestoneBonus:[
@@ -122,14 +122,14 @@ var BUILTIN_CARD_INFO = [
      {threshold:700000,bonusPts:22500,bonusValue:10000,label:"22,500 bonus MR + ₹10,000 Taj voucher at Rs.7L spend"}
    ],
    annualFee:4130,feeNote:"Rs.3,500 + 18% GST",
-   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 MR points on joining (1:1 transfer to airlines)"},
-   renewalBenefits:[{bonusPts:5000,partner:"Singapore Airlines (KrisFlyer)",label:"5,000 MR points on renewal (1:1 transfer = 5,000 airline miles)"}]},
+   welcomeBonus:{bonusPts:0,bonusCash:0,label:""},
+   renewalBenefits:[]},
 
   {names:["American Express Platinum Reserve","Amex Platinum Reserve","Amex Plat Reserve","AmEx Platinum Reserve"],
    milestoneBonus:[],
    annualFee:11800,feeNote:"Rs.10,000 + 18% GST",
-   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 MR points on joining (2:1 transfer to airlines)"},
-   renewalBenefits:[{bonusPts:2500,partner:"Singapore Airlines (KrisFlyer)",label:"5,000 MR points on renewal (2:1 transfer = 2,500 airline miles)"}]},
+   welcomeBonus:{bonusPts:0,bonusCash:0,label:""},
+   renewalBenefits:[]},
 
   {names:["Axis Atlas","Axis Bank Atlas","Axis Atlas Credit Card"],
    milestoneBonus:[
@@ -154,7 +154,7 @@ var BUILTIN_CARD_INFO = [
      {threshold:1200000,bonusValue:20000,label:"Business Class ticket voucher at Rs.12L spend"}
    ],
    annualFee:11800,feeNote:"Rs.10,000 + 18% GST; waived at Rs.12L spend",
-   welcomeBonus:{bonusPts:0,bonusCash:15000,label:"Complimentary Business Class upgrade voucher (~₹15,000 value) on joining"},
+   welcomeBonus:{bonusPts:0,bonusCash:0,label:""},
    renewalBenefits:[]},
 
   {names:["HSBC TravelOne","HSBC Travel One","HSBC TravelOne Credit Card"],
@@ -166,7 +166,7 @@ var BUILTIN_CARD_INFO = [
   {names:["HSBC Premier","HSBC Premier Mastercard","HSBC Premier Credit Card"],
    milestoneBonus:[],
    annualFee:0,feeNote:"Complimentary for HSBC Premier banking customers",
-   welcomeBonus:{bonusPts:5000,bonusCash:0,label:"5,000 HSBC Reward Points on joining"},
+   welcomeBonus:{bonusPts:20000,bonusCash:0,label:"20,000 HSBC Reward Points on joining"},
    renewalBenefits:[]},
 
   {names:["HDFC Marriott Bonvoy","HDFC Marriott","HDFC Bank Marriott Bonvoy"],
@@ -191,11 +191,11 @@ var BUILTIN_CARD_INFO = [
    welcomeBonus:{bonusPts:0,bonusCash:1000,label:"₹1,000 myCash on joining"},
    renewalBenefits:[{bonusCash:500,label:"₹500 myCash on renewal"}]},
 
-  {names:["SBI Card Elite","SBI Elite","SBI Credit Card Elite"],
+  {names:["SBI Card PRIME","SBI Prime","SBI Card Prime","SBI PRIME"],
    milestoneBonus:[],
-   annualFee:5899,feeNote:"Rs.4,999 + 18% GST; waived at Rs.10L spend",
-   welcomeBonus:{bonusPts:0,bonusCash:5000,label:"₹5,000 e-Gift voucher on joining"},
-   renewalBenefits:[{bonusCash:5000,label:"₹5,000 e-Gift voucher on renewal"}]}
+   annualFee:3539,feeNote:"Rs.2,999 + 18% GST; waived at Rs.3L spend",
+   welcomeBonus:{bonusPts:0,bonusCash:3000,label:"₹3,000 e-Gift voucher on joining"},
+   renewalBenefits:[{bonusCash:3000,label:"₹3,000 e-Gift voucher on renewal"}]}
 ];
 
 function patchCardsFromBuiltins() {
@@ -344,15 +344,15 @@ var _LEGACY_DC = [
    notes:'Rewards Marketplace portal: 6X hotels (12 pts/Rs.100), 4X flights (8 pts/Rs.100). Base: 4 pts/Rs.100 on flights/travel aggregators/forex; 2 pts/Rs.100 elsewhere. All pts (portal+base) transfer 1:1 to 20 partners. Portal accelerated cap 50K pts/yr. 3.5% forex. Rs.4,999 fee waived at Rs.8L spend.',
    milestones:'Rs.12L spend -> 10,000 bonus pts.'},
 
-  // ── SBI Card Elite ───────────────────────────────────────────────────────────
+  // ── SBI Card PRIME ───────────────────────────────────────────────────────────
   // Lifestyle card — NOT the miles/travel card. Points at 4pts=Rs.1 (0.25/pt).
   // No airline transfer partners. 5X on dining, departmental stores, groceries.
-  {id:'sbi_card_elite',name:'SBI Card Elite',currency:'SBI Reward Points',baseRate:2/100,forexMarkup:0.0199,intlRate:0.02,intlTravelRate:0.02,
+  {id:'sbi_card_prime',name:'SBI Card PRIME',currency:'SBI Reward Points',baseRate:2/100,forexMarkup:0.0199,intlRate:0.02,intlTravelRate:0.02,
    categories:{'Flights':2/100,'Hotels':2/100,'Dining':10/100,'Shopping':2/100,'Groceries':10/100,'Entertainment':2/100,'Healthcare':2/100,'Education':2/100,'Utilities':2/100,'Insurance':2/100,'Fuel':0,'Rent':0,'Government':2/100,'Jewellery':2/100,'Wallet Loads':0,'International Transactions':0.02},
    exclusions:['Fuel','Rent','Wallet Loads'],dex:['Fuel','Rent','Wallet Loads'],
    partners:[],
-   notes:'5X on dining, departmental stores and groceries (10 pts/Rs.100). 2 pts/Rs.100 on all other eligible spends. Points redeem at 4 pts = Rs.1 (Rs.0.25/pt) against catalogue — no airline/hotel transfer partners. 1.99% forex. Rs.4,999 fee waived at Rs.10L spend.',
-   milestones:'Up to 50,000 bonus pts/yr on milestone spends. 2 movie tickets/month (BookMyShow). 2 domestic lounge/quarter + 6 intl/year.'},
+   notes:'5X on dining, departmental stores and groceries (10 pts/Rs.100). 2 pts/Rs.100 on all other eligible spends. Points redeem at 4 pts = Rs.1 (Rs.0.25/pt) against catalogue — no airline/hotel transfer partners. 1.99% forex. Rs.2,999 fee waived at Rs.3L spend.',
+   milestones:'Up to 50,000 bonus pts/yr on milestone spends. 2 movie tickets/month (BookMyShow). 4 domestic lounge visits/quarter.'},
 
   // ── ICICI MakeMyTrip ─────────────────────────────────────────────────────────
   // myCash = Rs.1, redeemable ONLY on MakeMyTrip (NOT transferable to airline miles)
