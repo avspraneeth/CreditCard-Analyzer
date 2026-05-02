@@ -29,8 +29,8 @@ async function patchBuiltinsOnLoad() {
         card.milestoneBonus = JSON.parse(JSON.stringify(match.milestoneBonus));
       if (typeof match.annualFee === 'number') card.annualFee = match.annualFee;
       if (match.feeNote) card.feeNote = match.feeNote;
-      if (Array.isArray(match.renewalBenefits))
-        card.renewalBenefits = JSON.parse(JSON.stringify(match.renewalBenefits));
+      // renewalBenefits and welcomeBonus are authoritative in BUILTIN_CARD_INFO (cc-data.js);
+      // do NOT patch from cc-builtin.json which may have stale/empty arrays.
       patched++;
     });
     if (patched) autoSave();

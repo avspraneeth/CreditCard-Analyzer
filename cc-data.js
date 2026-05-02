@@ -1099,6 +1099,66 @@ function renderCardDetail() {
     milestoneHtml = '<div style="font-size:.76rem;color:var(--muted);line-height:1.6">'+(card.milestones||'No milestone data available.')+'</div>';
   }
 
+  // ── Joining & Renewal section ────────────────────────────────────────────────
+  var bpFees = bestPartner(card);
+  var binfo  = getBuiltinInfo(card) || {};
+  var wb     = card.welcomeBonus || binfo.welcomeBonus || null;
+  var rbArr  = card.renewalBenefits || binfo.renewalBenefits || [];
+  var annFee = card.annualFee !== undefined ? card.annualFee : (binfo.annualFee || 0);
+
+  var joinVal = wb ? (wb.bonusPts || 0) * bpFees.val + (wb.bonusCash || 0) : 0;
+  var baseRb  = rbArr.filter(function(r){ return !r.minSpend; });
+  var renewalVal = 0;
+  baseRb.forEach(function(r){
+    renewalVal += (r.bonusPts || 0) * (pv[canonical(r.partner || '')] || 0) + (r.bonusCash || 0);
+  });
+
+  function feeRow(label, val, positive) {
+    var c = positive ? 'var(--success)' : 'var(--danger)';
+    return '<div class="out-metric" style="font-size:.75rem">'+
+      '<span class="oml">'+label+'</span>'+
+      '<span style="color:'+c+'">'+(positive?'':'−')+fmt(Math.abs(val))+'</span></div>';
+  }
+  function netRow(label, val) {
+    var c = val > 0 ? 'var(--success)' : val < 0 ? 'var(--danger)' : 'var(--muted)';
+    return '<div class="out-metric" style="font-size:.78rem;font-weight:600;border-top:1px solid var(--border);padding-top:.35rem;margin-top:.25rem">'+
+      '<span class="oml">'+label+'</span>'+
+      '<span style="color:'+c+'">'+(val<0?'−':'')+fmt(Math.abs(val))+'</span></div>';
+  }
+
+  var wbLabel = wb && (wb.bonusPts || wb.bonusCash) ?
+    (wb.bonusPts ? (wb.bonusPts.toLocaleString('en-IN')+' pts') : '') +
+    (wb.bonusPts && wb.bonusCash ? ' + ' : '') +
+    (wb.bonusCash ? fmt(wb.bonusCash) : '') +
+    (wb.label ? ' — '+wb.label : '') : 'None';
+
+  var rbLines = rbArr.length ?
+    rbArr.map(function(r){
+      var v = (r.bonusPts||0)*(pv[canonical(r.partner||'')]||0)+(r.bonusCash||0);
+      return r.label + (v > 0 ? ' <span style="color:var(--success);font-size:.7rem">('+fmt(v)+')</span>' : '');
+    }).join('<br>') : 'None';
+
+  var joinRenewHtml =
+    '<div style="margin-top:.75rem">'+
+    '<div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.45rem">Joining &amp; Renewal</div>'+
+    '<div style="background:var(--surface2);border-radius:7px;padding:.8rem;font-size:.75rem;color:var(--muted);line-height:1.7;margin-bottom:.6rem">'+
+    '<strong style="color:var(--accent);display:block;margin-bottom:.2rem">Annual Fee</strong>'+
+    (card.feeNote || binfo.feeNote || (annFee ? fmt(annFee) : 'Free'))+
+    '<br><strong style="color:var(--accent);display:block;margin-top:.45rem;margin-bottom:.2rem">Welcome Bonus</strong>'+wbLabel+
+    '<br><strong style="color:var(--accent);display:block;margin-top:.45rem;margin-bottom:.2rem">Renewal Benefit</strong>'+rbLines+
+    '</div>'+
+    (annFee || joinVal || renewalVal ?
+      '<div style="background:var(--surface2);border-radius:7px;padding:.65rem .8rem">'+
+      feeRow('Joining bonus', joinVal, true)+
+      feeRow('Annual fee', annFee, false)+
+      netRow('Net Year 1', joinVal - annFee)+
+      '<div style="height:.5rem"></div>'+
+      feeRow('Renewal benefit', renewalVal, true)+
+      feeRow('Annual fee', annFee, false)+
+      netRow('Net Year 2+', renewalVal - annFee)+
+      '</div>' : '')+
+    '</div>';
+
   document.getElementById('card-detail-right').innerHTML =
     '<div class="card">'+
     '<div class="card-title">Settings &amp; Partners</div>'+
@@ -1115,7 +1175,9 @@ function renderCardDetail() {
     '<div style="margin-top:.75rem">'+
     '<div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.45rem">Milestone Benefits</div>'+
     milestoneHtml+
-    '</div></div>';
+    '</div>'+
+    joinRenewHtml+
+    '</div>';
 }
 
 function toggleExclusion(cardId, cat, el) {
